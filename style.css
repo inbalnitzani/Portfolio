@@ -1,0 +1,14 @@
+body{
+    background-color: #F2E8C6;
+}
+
+h1{ 
+    text-transform: uppercase;
+}
+*{
+    
+    font-family: 'Times New Roman', Times, serif ;
+    color: #982B1C;
+}
+.carousel-item >img{
+}
