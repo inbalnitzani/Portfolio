@@ -3,24 +3,39 @@ import { useEffect, useRef } from 'react'
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
+// Big on purpose. The arrow tip (the hotspot) sits ~7% in from the image's top-left.
+const W = 130
+const H = Math.round((W * 520) / 425)
+const TIP_X = Math.round(W * 0.067)
+const TIP_Y = Math.round(H * 0.07)
+
 /**
- * Fur cursor: follows the pointer and leans into its motion like fur in the wind,
- * sheds fluff when moving fast, puffs up over interactive things, squishes on click.
- * One rAF loop writing styles directly — no React renders per frame.
+ * Fur cursor. The arrow itself is rigid and follows the pointer exactly; only the fur moves.
+ * An SVG filter splits the image into a solid core (alpha eroded) and an outer band of hair.
+ * The band is displaced by drifting noise, biased against the direction of travel, so the hair
+ * tips trail behind like fur in the wind while the silhouette keeps its shape. A finer noise
+ * makes the strands inside shimmer. Fluff sheds when you move fast.
+ * One rAF loop writing attributes directly — no React renders per frame.
  * Off for touch devices and reduced motion (the system cursor stays).
  */
 export function FurCursor() {
   const root = useRef<HTMLDivElement>(null)
-  const noise = useRef<SVGFETurbulenceElement>(null)
-  const map = useRef<SVGFEDisplacementMapElement>(null)
+  const wind = useRef<SVGFETurbulenceElement>(null)
+  const windMap = useRef<SVGFEDisplacementMapElement>(null)
+  const biasR = useRef<SVGFEFuncRElement>(null)
+  const biasG = useRef<SVGFEFuncGElement>(null)
+  const shimmer = useRef<SVGFETurbulenceElement>(null)
 
   useEffect(() => {
     const el = root.current
-    if (!el || !noise.current || !map.current) return
+    const n = wind.current
+    const m = windMap.current
+    const br = biasR.current
+    const bg = biasG.current
+    const sh = shimmer.current
+    if (!el || !n || !m || !br || !bg || !sh) return
     if (!matchMedia('(pointer: fine)').matches) return
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const n = noise.current
-    const m = map.current
     const html = document.documentElement
 
     let x = innerWidth / 2,
@@ -29,10 +44,9 @@ export function FurCursor() {
       py = y,
       vx = 0,
       vy = 0
-    let lean = 0,
-      stretch = 0,
-      puff = 0,
-      squish = 0
+    let gust = 0,
+      press = 0,
+      puff = 0
     let hover = false,
       down = false,
       seen = false
@@ -52,7 +66,7 @@ export function FurCursor() {
         el.style.opacity = '1'
       }
       const target = e.target as Element | null
-      hover = !!target?.closest?.('a, button, [role="button"], input, label, summary, [data-fur-hover]')
+      hover = !!target?.closest?.('a, button, [role="button"], input, select, textarea, label, summary, [data-fur-hover]')
     }
     const onDown = () => (down = true)
     const onUp = () => (down = false)
@@ -61,47 +75,55 @@ export function FurCursor() {
 
     const shed = (speed: number) => {
       const now = performance.now()
-      if (speed < 14 || now - lastFluff < 28) return
+      if (speed < 16 || now - lastFluff < 34) return
       lastFluff = now
       const f = document.createElement('span')
-      f.className = 'pointer-events-none fixed top-0 left-0 z-[9998] h-[2px] w-[7px] rounded-full bg-fur'
-      const ox = 10 + Math.random() * 24
-      const oy = 14 + Math.random() * 30
-      const ang = Math.atan2(-vy, -vx) + (Math.random() - 0.5) * 0.9
-      const dist = 26 + Math.random() * 40
-      f.style.translate = `${x + ox}px ${y + oy}px`
+      const len = 10 + Math.random() * 12
+      f.className = 'pointer-events-none fixed top-0 left-0 z-[9998] rounded-full'
+      f.style.cssText += `width:${len}px;height:2px;background:${Math.random() > 0.5 ? '#f6a9cb' : '#f2b9d2'};`
+      // spawn somewhere on the fur, blown opposite to the motion
+      const ox = TIP_X + Math.random() * W * 0.55
+      const oy = TIP_Y + Math.random() * H * 0.75
+      const ang = Math.atan2(-vy, -vx) + (Math.random() - 0.5) * 0.8
+      const dist = 40 + Math.random() * 60
+      f.style.translate = `${x - TIP_X + ox}px ${y - TIP_Y + oy}px`
       document.body.appendChild(f)
       f.animate(
         [
-          { transform: `rotate(${ang}rad) scale(1)`, opacity: 0.95 },
-          { transform: `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist + 14}px) rotate(${ang + 2.4}rad) scale(0.4)`, opacity: 0 },
+          { transform: `rotate(${ang}rad)`, opacity: 0.9 },
+          { transform: `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist + 26}px) rotate(${ang + 1.8}rad) scale(0.5)`, opacity: 0 },
         ],
-        { duration: 650 + Math.random() * 350, easing: 'cubic-bezier(.2,.7,.3,1)' },
+        { duration: 900 + Math.random() * 500, easing: 'cubic-bezier(.2,.7,.3,1)' },
       ).onfinish = () => f.remove()
     }
 
     const frame = () => {
       t += 1
-      vx = lerp(vx, x - px, 0.3)
-      vy = lerp(vy, y - py, 0.3)
+      // smoothed velocity gives the fur a sense of mass
+      vx = lerp(vx, x - px, 0.25)
+      vy = lerp(vy, y - py, 0.25)
       px = x
       py = y
       const speed = Math.hypot(vx, vy)
 
-      lean = lerp(lean, clamp(-vx * 1.1, -22, 22), 0.18)
-      stretch = lerp(stretch, clamp(speed / 60, 0, 0.18), 0.15)
-      puff = lerp(puff, hover ? 1 : 0, 0.15)
-      squish = lerp(squish, down ? 1 : 0, 0.35)
+      gust = lerp(gust, clamp(speed / 22, 0, 1), 0.12)
+      puff = lerp(puff, hover ? 1 : 0, 0.12)
+      press = lerp(press, down ? 1 : 0, 0.3)
 
-      const sx = 1 + puff * 0.14 - squish * 0.14 + stretch * 0.4
-      const sy = 1 + puff * 0.14 - squish * 0.2 - stretch * 0.25
-      el.style.transform = `translate3d(${x - 3}px, ${y - 4}px, 0) skewX(${lean}deg) rotate(${lean * 0.25}deg) scale(${sx}, ${sy})`
+      // rigid: position + a uniform press (never skewed or stretched)
+      el.style.transform = `translate3d(${x - TIP_X}px, ${y - TIP_Y}px, 0) scale(${1 + puff * 0.06 - press * 0.08})`
 
-      const gust = clamp(speed * 0.55, 0, 11)
-      m.setAttribute('scale', (2.2 + gust + puff * 3 + Math.sin(t / 22) * 0.6).toFixed(2))
-      const fx = 0.035 + Math.sin(t / (40 - gust * 2)) * 0.006
-      const fy = 0.09 + Math.cos(t / (33 - gust * 1.5)) * 0.012
-      n.setAttribute('baseFrequency', `${fx.toFixed(4)} ${fy.toFixed(4)}`)
+      // Hair tips: a soft breeze at rest, long sweeps in a gust, a little fluffier over buttons
+      m.setAttribute('scale', (5 + gust * 20 + puff * 4 + Math.sin(t / 37) * 1.2).toFixed(2))
+      // Push the tips opposite to the motion (displacement samples from +bias, so hair moves -bias)
+      const bx = clamp(vx / 30, -0.32, 0.32)
+      const by = clamp(vy / 30, -0.32, 0.32) - 0.04 // a hint of gravity
+      br.setAttribute('intercept', (0.25 + bx).toFixed(3))
+      bg.setAttribute('intercept', (0.25 + by).toFixed(3))
+      // drift the noise so the strands keep moving (faster in a gust)
+      const k = 1 + gust * 2.5
+      n.setAttribute('baseFrequency', `${(0.045 + Math.sin((t * k) / 70) * 0.008).toFixed(4)} ${(0.11 + Math.cos((t * k) / 55) * 0.015).toFixed(4)}`)
+      sh.setAttribute('baseFrequency', `${(0.32 + Math.sin(t / 45) * 0.03).toFixed(3)}`)
 
       shed(speed)
       raf = requestAnimationFrame(frame)
@@ -127,22 +149,38 @@ export function FurCursor() {
   return (
     <>
       <svg width="0" height="0" className="absolute" aria-hidden>
-        <filter id="fur-wind" x="-30%" y="-30%" width="160%" height="160%">
-          <feTurbulence ref={noise} type="fractalNoise" baseFrequency="0.035 0.09" numOctaves={2} seed={7} result="n" />
-          <feDisplacementMap ref={map} in="SourceGraphic" in2="n" scale={2} xChannelSelector="R" yChannelSelector="G" />
+        <filter id="fur-wind" x="-25%" y="-25%" width="150%" height="150%" colorInterpolationFilters="sRGB">
+          {/* outer hair: drifting noise, biased against the motion, displaces the edge band */}
+          <feTurbulence ref={wind} type="fractalNoise" baseFrequency="0.045 0.11" numOctaves={3} seed={11} result="noise" />
+          <feComponentTransfer in="noise" result="windField">
+            <feFuncR ref={biasR} type="linear" slope="0.5" intercept="0.25" />
+            <feFuncG ref={biasG} type="linear" slope="0.5" intercept="0.25" />
+          </feComponentTransfer>
+          <feDisplacementMap ref={windMap} in="SourceGraphic" in2="windField" scale={5} xChannelSelector="R" yChannelSelector="G" result="blown" />
+          {/* inner strands: fine, small shimmer that can't change the outline */}
+          <feTurbulence ref={shimmer} type="fractalNoise" baseFrequency="0.32" numOctaves={1} seed={3} result="fine" />
+          <feDisplacementMap in="SourceGraphic" in2="fine" scale={2.2} xChannelSelector="R" yChannelSelector="G" result="shimmered" />
+          {/* solid core = the silhouette shrunk a few px; it never moves */}
+          <feMorphology in="SourceAlpha" operator="erode" radius={7} result="core" />
+          <feGaussianBlur in="core" stdDeviation={2.5} result="softCore" />
+          <feComposite in="shimmered" in2="softCore" operator="in" result="body" />
+          <feMerge>
+            <feMergeNode in="blown" />
+            <feMergeNode in="body" />
+          </feMerge>
         </filter>
       </svg>
       <div
         ref={root}
         aria-hidden
-        className="pointer-events-none fixed top-0 left-0 z-[9999] h-14 w-[46px] opacity-0 transition-opacity duration-200 will-change-transform"
-        style={{ transformOrigin: '3px 4px' }}
+        className="pointer-events-none fixed top-0 left-0 z-[9999] opacity-0 transition-opacity duration-200 will-change-transform"
+        style={{ width: W, height: H, transformOrigin: `${TIP_X}px ${TIP_Y}px` }}
       >
         <img
           src="/cursor-fur.png"
           alt=""
-          className="block h-full w-full"
-          style={{ filter: 'url(#fur-wind) drop-shadow(0 6px 6px rgb(58 42 32 / 0.25))' }}
+          className="block h-full w-full max-w-none"
+          style={{ filter: 'url(#fur-wind) drop-shadow(0 10px 12px rgb(58 42 32 / 0.28))' }}
         />
       </div>
     </>
