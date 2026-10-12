@@ -43,6 +43,22 @@ while let i = stack.popLast() {
   if y < h - 1 { stack.append(i + w) }
 }
 
+// Optional shadow pass: grow the background into neutral grey pixels (floor shadows).
+// Skin, fabric and gold are saturated and hair is dark, so they're left alone.
+if args.count > 4, args[4] == "shadow" {
+  var grow: [Int] = []
+  for i in 0..<(w * h) where isBg[i] { grow.append(i) }
+  while let i = grow.popLast() {
+    let x = i % w, y = i / w
+    for n in [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1] where n >= 0 && !isBg[n] {
+      let c = rgb(n)
+      let sat = max(c.0, c.1, c.2) - min(c.0, c.1, c.2)
+      let lum = (c.0 + c.1 + c.2) / 3
+      if sat < 16 && lum > 105 { isBg[n] = true; grow.append(n) }
+    }
+  }
+}
+
 // Alpha: 0 for background; feather foreground pixels that touch background
 for i in 0..<(w * h) {
   var a: Double = isBg[i] ? 0 : 1

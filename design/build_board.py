@@ -13,6 +13,7 @@ PINS = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, 'pins')
 CUT = os.path.join(HERE, 'cut-sm')
 GAMES = os.path.join(HERE, '..', 'public', 'games')
 PHOTOS = os.path.join(HERE, 'photos')
+CHAR = os.path.join(HERE, 'character', 'sm')
 
 # ── Tokens (v2: desktop scrapbook) ──────────────────────────────
 PAPER = '#F4EFE6'
@@ -255,10 +256,23 @@ for i, p in enumerate(PROPS):
   text(px + 28, ay + 420, p, size=18, fam=MONO, fill=INK_SOFT)
 end()
 
+cy0 = ay + 560
+text(X0, cy0, '06 — PLAYER CHARACTER (3D TOY STYLE, A2)', size=20, fam=PIXEL, fill=INK_SOFT)
+POSES = [('idle', 'START idle · breathing loop', 700, 1254), ('wave', 'LVL 1 · says hi', 700, 1254), ('run', 'scroll · runs between levels', 700, 869), ('play', 'LVL 4 · playing games', 700, 1254)]
+BGS = [BLUSH, LILAC, '#DCEFC3', SKY]
+for i, (n, cap, pw, ph) in enumerate(POSES):
+  px = X0 + i * 750
+  rect(px, cy0 + 40, 710, 640, BGS[i], r=32)
+  ih = 560 if n != 'run' else 470
+  iw = ih * pw / ph
+  img(os.path.join(CHAR, f'pose-{n}.png'), px + (710 - iw) / 2, cy0 + 40 + 600 - ih, iw, ih)
+  text(px + 32, cy0 + 90, n.upper(), size=18, fam=PIXEL)
+  text(px + 32, cy0 + 660, cap, size=28, fam=SERIF, italic=True, fill=INK_SOFT)
+
 # ── Mockups ──
 MW, MH, GAP = 1440, 900, 120
-my = ay + 600
-text(X0, my - 60, '06 — LEVEL MOCKUPS (1440 × 900)', size=20, fam=PIXEL, fill=INK_SOFT)
+my = cy0 + 860
+text(X0, my - 60, '07 — LEVEL MOCKUPS (1440 × 900)', size=20, fam=PIXEL, fill=INK_SOFT)
 
 
 def at(i):
@@ -271,8 +285,8 @@ frame(fx, fy, MW, MH, 'START — Press start')
 hud(fx, fy, MW, 0)
 text(fx + 80, fy + 350, 'Inbal', size=250, fam=DISPLAY, weight=900, ls=-12)
 text(fx + 80, fy + 570, 'Nitzani', size=250, fam=DISPLAY, weight=900, ls=-12)
-# photo cut-out sticker
-out.append(f'<image href="{b64(os.path.join(PHOTOS, "pink-dress-cut.png"))}" x="{fx + 1020}" y="{fy + 110}" width="204" height="760" preserveAspectRatio="xMidYMid meet" filter="url(#sticker)"/>')
+# game character (waving)
+img(os.path.join(CHAR, 'pose-wave.png'), fx + 930, fy + 150, 420, 752)
 bubble(fx + 1190, fy + 150, 'hi! wanna play?')
 bubble(fx + 1280, fy + 212, ':)')
 img(os.path.join(CUT, 'chrome-star.png'), fx + 860, fy + 600, 180, 180, rot=-12)
@@ -350,7 +364,7 @@ text(fx + 590, fy + 250, 'tucked inside', size=110, fam=SERIF, italic=True, fill
 folder(fx + 80, fy + 470, 380, 260, FUR, 'Whalo', '2026 – now · active quest', [('Push at scale · 4M/day', -6), ('Rule-tree compiler', 4)])
 folder(fx + 530, fy + 470, 380, 260, '#C9D9B6', 'Freelance', '2025 – 26 · music licensing', [('Song catalog + quotes', -3), ('Claude Skill search', 5)])
 folder(fx + 980, fy + 470, 380, 260, LILAC, 'NanoLock', '2023 – 25 · OT/IoT security', [('Groups page', -5), ('Audit log tooling', 3)])
-img(os.path.join(CUT, 'fur-cursor.png'), fx + 330, fy + 610, 150, 150, rot=-10)
+img(os.path.join(CHAR, 'pose-run.png'), fx + 1180, fy + 90, 210, 261)
 text(fx + 80, fy + 840, 'Hover: papers slide up. Click: folder opens into a window with the loot list.', size=20, fam=MONO, fill=INK_SOFT)
 end()
 
@@ -369,7 +383,7 @@ for k, (g, on) in enumerate([('Yoru', True), ('Friday Night Rides', False), ('60
   rect(fx + 80, gy, 380, 60, INK if on else WHITE, r=30)
   text(fx + 110, gy + 39, ('▶  ' if on else '    ') + g, size=22, fam=BODY, weight=600, fill=WHITE if on else INK)
 text(fx + 90, fy + 720, 'playable right here!', size=44, fam=HAND, weight=600, rot=-4)
-img(os.path.join(CUT, 'fur-gamepad.png'), fx + 1160, fy + 620, 260, 260, rot=8)
+img(os.path.join(CHAR, 'pose-play.png'), fx + 1190, fy + 420, 250, 448)
 end()
 
 # 6. LVL 5 — Side quests (Paint window)
