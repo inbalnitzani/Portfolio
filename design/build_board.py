@@ -12,6 +12,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PINS = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, 'pins')
 CUT = os.path.join(HERE, 'cut-sm')
 GAMES = os.path.join(HERE, '..', 'public', 'games')
+PHOTOS = os.path.join(HERE, 'photos')
 
 # ── Tokens (v2: desktop scrapbook) ──────────────────────────────
 PAPER = '#F4EFE6'
@@ -270,12 +271,10 @@ frame(fx, fy, MW, MH, 'START — Press start')
 hud(fx, fy, MW, 0)
 text(fx + 80, fy + 350, 'Inbal', size=250, fam=DISPLAY, weight=900, ls=-12)
 text(fx + 80, fy + 570, 'Nitzani', size=250, fam=DISPLAY, weight=900, ls=-12)
-# photo cut-out slot
-out.append(f'<path d="M{fx + 1010} {fy + 190} q110 -40 190 40 q60 80 40 200 l50 330 h-360 l40 -330 q-20 -160 40 -240 z" fill="{BLUSH}" stroke="{WHITE}" stroke-width="14" filter="url(#soft)"/>')
-text(fx + 1080, fy + 470, 'your photo', size=40, fam=HAND, weight=600, fill=INK_SOFT)
-text(fx + 1070, fy + 510, 'cut-out here', size=40, fam=HAND, weight=600, fill=INK_SOFT)
-bubble(fx + 1160, fy + 150, 'hi! wanna play?')
-bubble(fx + 1250, fy + 212, ':)')
+# photo cut-out sticker
+out.append(f'<image href="{b64(os.path.join(PHOTOS, "pink-dress-cut.png"))}" x="{fx + 1020}" y="{fy + 110}" width="204" height="760" preserveAspectRatio="xMidYMid meet" filter="url(#sticker)"/>')
+bubble(fx + 1190, fy + 150, 'hi! wanna play?')
+bubble(fx + 1280, fy + 212, ':)')
 img(os.path.join(CUT, 'chrome-star.png'), fx + 860, fy + 600, 180, 180, rot=-12)
 text(fx + 84, fy + 660, 'Full-stack engineer by day,', size=34, fam=SERIF, italic=True, fill=INK_SOFT)
 text(fx + 84, fy + 702, 'game developer by night.', size=34, fam=SERIF, italic=True, fill=INK_SOFT)
@@ -294,7 +293,7 @@ text(fx + 80, fy + 250, 'Meet the', size=120, fam=DISPLAY, weight=900, ls=-5)
 text(fx + 640, fy + 250, 'player', size=130, fam=SERIF, italic=True, fill=HOT)
 # polaroid
 rect(fx + 90, fy + 320, 380, 470, WHITE, r=6, extra=f'transform="rotate(-4 {fx + 280} {fy + 555})" filter="url(#soft)"')
-rect(fx + 115, fy + 345, 330, 360, BLUSH, extra=f'transform="rotate(-4 {fx + 280} {fy + 555})"')
+out.append(f'<g transform="rotate(-4 {fx + 280} {fy + 555})"><clipPath id="polaroid"><rect x="{fx + 115}" y="{fy + 345}" width="330" height="360"/></clipPath><rect x="{fx + 115}" y="{fy + 345}" width="330" height="360" fill="{BLUSH}"/><image href="{b64(os.path.join(PHOTOS, "portrait-cut-sm.png"))}" x="{fx + 95}" y="{fy + 365}" width="370" height="564" clip-path="url(#polaroid)" preserveAspectRatio="xMidYMin slice"/></g>')
 text(fx + 180, fy + 760, 'me, probably debugging', size=28, fam=HAND, weight=600, rot=-4)
 rect(fx + 230, fy + 300, 120, 36, '#F3E7A8', opacity=0.85, extra=f'transform="rotate(6 {fx + 290} {fy + 318})"')
 # receipt
@@ -445,7 +444,7 @@ H = at(7)[1] + MH + 160
 
 svg = (
   f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="{W}" height="{H}" viewBox="0 0 {W} {H}">'
-  '<defs><filter id="soft" x="-20%" y="-20%" width="140%" height="160%">'
+  '<defs><filter id="sticker" x="-15%" y="-5%" width="130%" height="110%"><feMorphology in="SourceAlpha" operator="dilate" radius="7" result="d"/><feFlood flood-color="#fff"/><feComposite in2="d" operator="in" result="w"/><feDropShadow in="w" dx="0" dy="14" stdDeviation="16" flood-color="#3A2A20" flood-opacity="0.18" result="ws"/><feMerge><feMergeNode in="ws"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="soft" x="-20%" y="-20%" width="140%" height="160%">'
   '<feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#3A2A20" flood-opacity="0.14"/></filter></defs>'
   f'<rect width="{W}" height="{H}" fill="{PAPER}"/>' + '\n'.join(out) + '</svg>'
 )

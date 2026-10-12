@@ -6,3 +6,4 @@ dist-ssr
 .vercel
 design/portfolio-board.svg
 design/pins/
+design/photos/*.jpg
