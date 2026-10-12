@@ -24,8 +24,8 @@ export default function App() {
         <Profile />
         <SkillTree />
         <QuestLog />
-        <Games onModal={setModal} />
         <SideQuests />
+        <Games onModal={setModal} />
         <Boss />
       </main>
       <Companion hidden={modal} />

@@ -5,7 +5,7 @@ import { LevelHeader, Section } from '../components/ui'
 import { LEVELS, PROFILE } from '../data/cv'
 import { useGame } from '../game/GameProvider'
 
-const L = LEVELS[6]
+const L = LEVELS.find((l) => l.id === 'boss')!
 const MAX_HP = 100
 
 type Move = { label: string; sub: string; dmg: number; href?: string; download?: boolean; copy?: string }

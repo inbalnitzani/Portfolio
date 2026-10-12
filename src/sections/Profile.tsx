@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { Bubble, LevelHeader, Prop, Reveal, Scribble, ScribbleArrow, Section } from '../components/ui'
 import { LEVELS, PROFILE, RECEIPT } from '../data/cv'
 
-const L = LEVELS[1]
+const L = LEVELS.find((l) => l.id === 'profile')!
 
 export function Profile() {
   const reduce = useReducedMotion()

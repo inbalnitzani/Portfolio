@@ -222,12 +222,16 @@ export const GAMES: Game[] = [
   },
 ]
 
+export type Chapter = { t: number; caption: string }
+
 export type SideQuest = {
-  slug: 'trakaboo' | 'music' | 'router'
+  slug: 'music' | 'trakaboo' | 'joblog'
   title: string
   kicker: string
   body: string
   stack: string[]
+  /** Screen recording of the real app running on demo data (design/demos/record.mjs) */
+  video: { src: string; file: string; phone?: boolean; rate?: number; chapters: Chapter[] }
   link?: { label: string; href: string }
 }
 
@@ -236,23 +240,44 @@ export const SIDE_QUESTS: SideQuest[] = [
     slug: 'music',
     title: 'Yair Nitzani Music',
     kicker: 'Client platform · solo build',
-    body: 'A searchable song catalog with an instant licensing-price calculator, an admin console, and an AI Claude Skill that turns a creative brief into a shortlist of songs.',
+    body: 'A licensing platform for a music catalog: an instant price calculator for productions, an admin console to search and manage ~1,000 songs, and an AI song finder (a Claude Skill) that turns a creative brief into a shortlist.',
     stack: ['React', 'Supabase', 'PostgreSQL', 'Tailwind', 'Claude'],
+    video: { src: '/videos/music.mp4', file: 'nitzani_music', rate: 1.5, chapters: [
+      { t: 0, caption: "Real app, demo data: the music licensing calculator" },
+      { t: 16.46, caption: "Instant quote by production, media, territory and length" },
+      { t: 24.73, caption: "Admin catalog: search and filter ~1,000 songs" },
+      { t: 42.79, caption: "AI song finder: a creative brief in, a shortlist out" },
+    ] },
     link: { label: 'Source', href: 'https://github.com/inbalnitzani/Nitzani-Music' },
   },
   {
     slug: 'trakaboo',
     title: 'Trakaboo',
     kicker: 'Personal PWA · in progress',
-    body: 'Peek at where your money went. An expense tracker that logs Apple Pay taps automatically, imports card statements, merges duplicates and shows the month as pink sticker charts.',
+    body: 'Peek at where your money went. An expense tracker that logs Apple Pay taps automatically, imports card statements, merges duplicates and shows each month as pink sticker charts, in Hebrew and English.',
     stack: ['Next.js 16', 'React 19', 'Supabase', 'next-intl', 'Playwright'],
+    video: { src: '/videos/trakaboo.mp4', file: 'trakaboo', phone: true, rate: 1.25, chapters: [
+      { t: 0, caption: "Real app, demo data: this month at a glance" },
+      { t: 6.7, caption: "Flip between months" },
+      { t: 10.39, caption: "Every transaction, auto-categorised" },
+      { t: 18.47, caption: "Quick manual entry" },
+      { t: 26.95, caption: "Hebrew + English with a full RTL flip" },
+    ] },
+    link: { label: 'Source', href: 'https://github.com/inbalnitzani/trakaboo' },
   },
   {
-    slug: 'router',
-    title: 'Claude Skills Router',
-    kicker: 'Internal AI tooling',
-    body: 'An event-driven webhook router that dispatches incoming events to Claude Skills, used for automated triage and review workflows.',
-    stack: ['Node.js', 'Claude Agent SDK', 'Webhooks', 'Slack API'],
+    slug: 'joblog',
+    title: 'Job Search Log',
+    kicker: 'Claude routine · runs daily at 08:00',
+    body: 'A scheduled Claude routine that searches LinkedIn and Indeed every morning across four tracks (Frontend, Backend, Full Stack, Unity), checks each posting against my real experience, scores the match, tailors a CV and cover letter, and logs it all to a tracker app with documents stored in Supabase.',
+    stack: ['Claude routines', 'Agent skills', 'Supabase', 'docx', 'Artifacts DB'],
+    video: { src: '/videos/joblog.mp4', file: 'job_search_log', rate: 1.15, chapters: [
+      { t: 0, caption: "A Claude routine fills this log every morning at 08:00" },
+      { t: 1.78, caption: "Jobs it found and qualified, ready to apply" },
+      { t: 4.91, caption: "Each one: match score, notes, tailored CV + cover letter" },
+      { t: 15.47, caption: "Track every application through to the offer" },
+      { t: 19.55, caption: "Search across companies, tracks and notes" },
+    ] },
   },
 ]
 
@@ -261,8 +286,8 @@ export const LEVELS = [
   { id: 'profile', short: 'LVL 1', title: 'Meet the', accent: 'player' },
   { id: 'skills', short: 'LVL 2', title: 'Skill', accent: 'tree' },
   { id: 'quests', short: 'LVL 3', title: 'Quests', accent: 'tucked inside' },
-  { id: 'games', short: 'LVL 4', title: 'Games', accent: 'I made' },
-  { id: 'side', short: 'LVL 5', title: 'Side', accent: 'quests' },
+  { id: 'side', short: 'LVL 4', title: 'Side', accent: 'quests' },
+  { id: 'games', short: 'LVL 5', title: 'Games', accent: 'I made' },
   { id: 'boss', short: 'BOSS', title: 'Final', accent: 'boss' },
 ] as const
 

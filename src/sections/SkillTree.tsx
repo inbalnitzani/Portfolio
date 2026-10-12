@@ -4,7 +4,7 @@ import { LevelHeader, Section } from '../components/ui'
 import { LEVELS, SKILL_TREE, type SkillGroup } from '../data/cv'
 import { useGame } from '../game/GameProvider'
 
-const L = LEVELS[2]
+const L = LEVELS.find((l) => l.id === 'skills')!
 
 // Keycap colourways: skirt (sides) + top face gradient
 const CAPS: Record<SkillGroup['tint'], { skirt: string; top: string; text: string }> = {

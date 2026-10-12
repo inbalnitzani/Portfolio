@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { LevelHeader, Section, Window } from '../components/ui'
 import { LEVELS, QUESTS, type Quest } from '../data/cv'
 
-const L = LEVELS[3]
+const L = LEVELS.find((l) => l.id === 'quests')!
 const COLORS = ['var(--color-fur)', 'var(--color-sage)', 'var(--color-lilac)']
 
 function Folder({ quest, color, open, onOpen, index }: { quest: Quest; color: string; open: boolean; onOpen: () => void; index: number }) {

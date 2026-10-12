@@ -4,7 +4,7 @@ import { Character } from '../components/Character'
 import { LevelHeader, Reveal, Scribble, Section } from '../components/ui'
 import { GAMES, LEVELS, PROFILE, type Game } from '../data/cv'
 
-const L = LEVELS[4]
+const L = LEVELS.find((l) => l.id === 'games')!
 const featured = GAMES.filter((g) => g.featured)
 const shelf = GAMES.filter((g) => !g.featured)
 // Screen rectangle inside /props/pink-computer.png, as % of the image

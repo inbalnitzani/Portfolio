@@ -1,40 +1,49 @@
 import { AnimatePresence, motion, useInView, useReducedMotion } from 'motion/react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-
-export type Scene = { caption: string; ms: number }
+import { useEffect, useRef, useState } from 'react'
+import type { SideQuest } from '../data/cv'
 
 const TOOLS = ['↖', '⬚', '✎', '🖌', 'A', '◯', '▭', '⌇', '🪣', '⌕']
-const SWATCHES = ['#ff4fa3', '#f6a9cb', '#d9ccff', '#9dcb5a', '#bfe3ff', '#2b3ff5', '#f3e7a8', '#121212']
+const SWATCHES = ['#ff4fa3', '#9dcb5a', '#d9ccff', '#bfe3ff', '#f3e7a8', '#f6a9cb', '#2b3ff5', '#121212']
 
 /**
- * A code-animated "video" playing inside an MS Paint window.
- * Each scene paints itself in with a brush-stroke wipe. Plays while on screen and loops;
- * the colour swatches double as chapter buttons.
+ * A screen recording of the real app, playing inside an MS Paint window.
+ * Plays while on screen, pauses when scrolled away. The colour swatches are
+ * chapter buttons and the caption follows the chapter under the playhead.
  */
-export function TrailerPlayer({ title, scenes, render }: { title: string; scenes: Scene[]; render: (scene: number) => ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { amount: 0.45 })
+export function PaintPlayer({ video }: { video: SideQuest['video'] }) {
+  const wrap = useRef<HTMLDivElement>(null)
+  const el = useRef<HTMLVideoElement>(null)
+  const inView = useInView(wrap, { amount: 0.4 })
   const reduce = useReducedMotion()
-  const [scene, setScene] = useState(0)
   const [paused, setPaused] = useState(false)
-  const [loop, setLoop] = useState(0)
-  const playing = inView && !paused && !reduce
+  const [time, setTime] = useState(0)
+  const [duration, setDuration] = useState(1)
+  const { chapters } = video
+  const chapter = Math.max(0, chapters.findLastIndex((c) => c.t <= time + 0.05))
 
   useEffect(() => {
-    if (!playing) return
-    const id = window.setTimeout(() => {
-      if (scene + 1 >= scenes.length) setLoop((l) => l + 1)
-      setScene((s) => (s + 1) % scenes.length)
-    }, scenes[scene].ms)
-    return () => window.clearTimeout(id)
-  }, [playing, scene, scenes])
+    const v = el.current
+    if (!v) return
+    v.playbackRate = video.rate ?? 1
+    if (inView && !paused && !reduce) v.play().catch(() => {})
+    else v.pause()
+  }, [inView, paused, reduce, video.rate])
+
+  const seek = (i: number) => {
+    const v = el.current
+    if (!v) return
+    v.currentTime = chapters[i].t + 0.05
+    setTime(v.currentTime)
+  }
+
+  const chapterEnd = (i: number) => (i + 1 < chapters.length ? chapters[i + 1].t : duration)
 
   return (
-    <div ref={ref} className="overflow-hidden rounded-xl bg-[#f6f3ee] shadow-lift ring-1 ring-ink/10">
+    <div ref={wrap} className="overflow-hidden rounded-xl bg-[#f6f3ee] shadow-lift ring-1 ring-ink/10">
       {/* title bar */}
       <div className="flex items-center gap-2 bg-butter px-3 py-2">
         <span className="size-3.5 rounded-sm bg-hot" aria-hidden />
-        <span className="truncate font-mono text-xs">{title}.mp4 - Paint</span>
+        <span className="truncate font-mono text-xs">{video.file}.mp4 - Paint</span>
         <span className="ms-auto flex gap-1" aria-hidden>
           {['–', '□', '×'].map((g) => (
             <span key={g} className="grid size-5 place-items-center rounded bg-white/70 font-mono text-[10px]">
@@ -54,109 +63,78 @@ export function TrailerPlayer({ title, scenes, render }: { title: string; scenes
       </div>
 
       <div className="flex gap-2 p-2">
-        {/* tools */}
         <div className="hidden grid-cols-2 content-start gap-1 sm:grid" aria-hidden>
           {TOOLS.map((t, i) => (
-            <span key={i} className={`grid size-7 place-items-center rounded text-xs ${i === 2 ? 'bg-fur' : 'bg-white'} ring-1 ring-ink/10`}>
+            <span key={i} className={`grid size-7 place-items-center rounded text-xs ring-1 ring-ink/10 ${i === 2 ? 'bg-fur' : 'bg-white'}`}>
               {t}
             </span>
           ))}
         </div>
 
         {/* canvas */}
-        <div className="relative aspect-[16/11] flex-1 overflow-hidden bg-white ring-1 ring-ink/10 sm:aspect-[16/10]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`${loop}-${scene}`}
-              className="absolute inset-0 grid place-items-center bg-blush/60 p-4 sm:p-6"
-              initial={reduce ? false : { clipPath: 'inset(0 100% 0 0 round 0 40% 40% 0)' }}
-              animate={{ clipPath: 'inset(0 0% 0 0 round 0 0% 0% 0)' }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.55, ease: [0.65, 0, 0.35, 1] }}
-            >
-              {render(scene)}
-            </motion.div>
-          </AnimatePresence>
+        <div className={`relative flex aspect-[16/10] flex-1 items-center justify-center overflow-hidden ring-1 ring-ink/10 ${video.phone ? 'bg-blush' : 'bg-white'}`}>
+          <motion.video
+            ref={el}
+            src={video.src}
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            aria-label={`Screen recording: ${chapters.map((c) => c.caption).join('. ')}`}
+            onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
+            onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 1)}
+            initial={reduce ? false : { clipPath: 'inset(0 100% 0 0)' }}
+            whileInView={{ clipPath: 'inset(0 0% 0 0)' }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, ease: [0.65, 0, 0.35, 1] }}
+            className={video.phone ? 'h-[94%] w-auto rounded-[22px] shadow-soft ring-4 ring-ink' : 'h-full w-full object-contain'}
+          />
           <AnimatePresence mode="wait">
             <motion.p
-              key={scene}
+              key={chapter}
               initial={{ y: 16, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -8, opacity: 0 }}
-              className="absolute inset-x-0 bottom-3 mx-auto w-max max-w-[90%] rounded-full bg-ink/85 px-3 py-1 text-center text-xs font-medium text-white sm:text-sm"
+              className="absolute inset-x-0 bottom-3 mx-auto w-max max-w-[92%] rounded-full bg-ink/85 px-3 py-1 text-center text-xs font-medium text-white backdrop-blur sm:text-sm"
             >
-              {scenes[scene].caption}
+              {chapters[chapter].caption}
             </motion.p>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* palette = controls */}
+      {/* palette = chapter controls */}
       <div className="flex items-center gap-2 border-t border-ink/10 px-3 py-2">
         <button
           onClick={() => setPaused((p) => !p)}
-          aria-label={paused ? 'Play trailer' : 'Pause trailer'}
+          aria-label={paused ? 'Play video' : 'Pause video'}
           className="grid size-8 shrink-0 place-items-center rounded-full bg-ink text-xs text-white"
         >
           {paused ? '▶' : 'II'}
         </button>
         <div className="flex flex-1 flex-wrap gap-1.5">
-          {scenes.map((s, i) => (
-            <button
-              key={i}
-              onClick={() => setScene(i)}
-              aria-label={`Chapter ${i + 1}: ${s.caption}`}
-              className={`relative h-6 w-8 overflow-hidden rounded ring-1 ring-ink/15 transition-transform ${i === scene ? '-translate-y-0.5 scale-110' : ''}`}
-              style={{ background: SWATCHES[i % SWATCHES.length] + '55' }}
-            >
-              <motion.span
-                key={`${loop}-${scene}-${i}`}
-                className="absolute inset-y-0 start-0"
-                style={{ background: SWATCHES[i % SWATCHES.length] }}
-                initial={{ width: i < scene ? '100%' : '0%' }}
-                animate={{ width: i < scene ? '100%' : i === scene && playing ? '100%' : i === scene ? '50%' : '0%' }}
-                transition={i === scene && playing ? { duration: s.ms / 1000, ease: 'linear' } : { duration: 0 }}
-              />
-            </button>
-          ))}
+          {chapters.map((c, i) => {
+            const start = c.t
+            const end = chapterEnd(i)
+            const fill = time >= end ? 1 : time <= start ? 0 : (time - start) / (end - start)
+            return (
+              <button
+                key={i}
+                onClick={() => seek(i)}
+                aria-label={`Chapter ${i + 1}: ${c.caption}`}
+                title={c.caption}
+                className={`relative h-6 w-9 overflow-hidden rounded ring-1 ring-ink/15 transition-transform ${i === chapter ? '-translate-y-0.5 scale-110' : ''}`}
+                style={{ background: SWATCHES[i % SWATCHES.length] + '55' }}
+              >
+                <span className="absolute inset-y-0 start-0" style={{ width: `${fill * 100}%`, background: SWATCHES[i % SWATCHES.length] }} />
+              </button>
+            )
+          })}
         </div>
         <span className="font-mono text-[11px] text-ink-soft tabular-nums">
-          {scene + 1}/{scenes.length}
+          {chapter + 1}/{chapters.length}
         </span>
       </div>
     </div>
   )
-}
-
-/** Types text out character by character. */
-export function Typewriter({ text, speed = 45, className = '' }: { text: string; speed?: number; className?: string }) {
-  const [n, setN] = useState(0)
-  useEffect(() => {
-    if (n >= text.length) return
-    const id = window.setTimeout(() => setN((x) => x + 1), speed)
-    return () => window.clearTimeout(id)
-  }, [n, text, speed])
-  return (
-    <span className={className}>
-      {text.slice(0, n)}
-      <span className="motion-safe:animate-blink">|</span>
-    </span>
-  )
-}
-
-/** Counts a number up from 0. */
-export function CountUp({ to, ms = 900, className = '' }: { to: number; ms?: number; className?: string }) {
-  const [v, setV] = useState(0)
-  useEffect(() => {
-    let raf = 0
-    const t0 = performance.now()
-    const tick = (t: number) => {
-      const k = Math.min(1, (t - t0) / ms)
-      setV(Math.round(to * (1 - Math.pow(1 - k, 3))))
-      if (k < 1) raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [to, ms])
-  return <span className={`tabular-nums ${className}`}>{v.toLocaleString('en-US')}</span>
 }

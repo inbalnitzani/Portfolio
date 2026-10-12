@@ -1,32 +1,26 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import { LevelHeader, Prop, Reveal, Section } from '../components/ui'
-import { LEVELS, SIDE_QUESTS, type SideQuest } from '../data/cv'
-import { MusicTrailer, RouterTrailer, TrakabooTrailer } from '../trailers/trailers'
+import { LEVELS, SIDE_QUESTS } from '../data/cv'
+import { PaintPlayer } from '../trailers/PaintPlayer'
 
-const L = LEVELS[5]
-const TRAILERS: Record<SideQuest['slug'], () => React.JSX.Element> = {
-  music: MusicTrailer,
-  trakaboo: TrakabooTrailer,
-  router: RouterTrailer,
-}
+const L = LEVELS.find((l) => l.id === 'side')!
 
 export function SideQuests() {
   const [active, setActive] = useState(0)
   const q = SIDE_QUESTS[active]
-  const Trailer = TRAILERS[q.slug]
 
   return (
     <Section id="side" className="grain">
-      <LevelHeader short={L.short} title={L.title} accent={L.accent} note="software I build when I spot a gap" />
+      <LevelHeader short={L.short} title={L.title} accent={L.accent} note="real apps, recorded on demo data" />
       <Prop src="/props/fur-gamepad.png" depth={1.1} rotate={12} className="end-[-3%] top-[-4%] hidden w-40 lg:block" />
 
       <div className="grid items-start gap-8 lg:grid-cols-[1.55fr_1fr] lg:gap-12">
         <Reveal y={60}>
-          {/* key remounts the trailer so each project starts at scene 1 */}
+          {/* key remounts the player so each project starts from the top */}
           <AnimatePresence mode="wait">
             <motion.div key={q.slug} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.3 }}>
-              <Trailer />
+              <PaintPlayer video={q.video} />
             </motion.div>
           </AnimatePresence>
         </Reveal>
