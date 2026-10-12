@@ -1,7 +1,7 @@
 import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
-import { Character } from '../components/Character'
-import { Bubble, Prop, ScribbleArrow } from '../components/ui'
+import { PLAYER_SLOT_ID } from '../components/Character'
+import { Prop, ScribbleArrow } from '../components/ui'
 import { PROFILE } from '../data/cv'
 import { scrollToLevel } from '../game/scroll'
 
@@ -13,8 +13,6 @@ export function StartScreen() {
   const [zoom, setZoom] = useState(false)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
   const nameY = useTransform(scrollYProgress, [0, 1], [0, -160])
-  const charY = useTransform(scrollYProgress, [0, 1], [0, -60])
-  const charScale = useTransform(scrollYProgress, [0, 1], [1, 1.15])
   const fade = useTransform(scrollYProgress, [0, 0.8], [1, 0])
 
   const start = () => {
@@ -90,22 +88,8 @@ export function StartScreen() {
           </motion.div>
         </motion.div>
 
-        {/* Player character */}
-        <motion.div style={{ y: charY, scale: charScale }} className="relative mx-auto h-[46svh] lg:mx-0 lg:h-[min(68svh,640px)] lg:justify-self-end">
-          <motion.div
-            initial={reduce ? false : { y: -500, scaleY: 1.1 }}
-            animate={{ y: 0, scaleY: [1.1, 0.88, 1.04, 1] }}
-            transition={{ y: { type: 'spring', stiffness: 160, damping: 14, delay: 0.5 }, scaleY: { delay: 0.95, duration: 0.6 } }}
-            className="relative h-full origin-bottom"
-          >
-            <Character pose="wave" />
-          </motion.div>
-          <div className="absolute start-1/2 bottom-0 h-5 w-48 -translate-x-1/2 rounded-[50%] bg-ink/15 blur-md" />
-          <div className="absolute end-[-4%] top-[6%] flex flex-col items-end gap-2">
-            <Bubble delay={1.6}>hi! wanna play?</Bubble>
-            <Bubble delay={1.9}>:)</Bubble>
-          </div>
-        </motion.div>
+        {/* The player stands here; <Player> (App) is the one character that then runs down the page */}
+        <div id={PLAYER_SLOT_ID} className="relative mx-auto h-[46svh] w-[28svh] lg:mx-0 lg:h-[min(68svh,640px)] lg:w-[min(41svh,384px)] lg:justify-self-end" />
       </motion.div>
 
       {/* Ticker */}

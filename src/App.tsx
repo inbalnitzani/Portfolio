@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Companion } from './components/Character'
+import { Player } from './components/Character'
 import { FurCursor } from './components/FurCursor'
 import { HUD, Toasts } from './components/HUD'
 import { GameProvider } from './game/GameProvider'
@@ -28,7 +28,7 @@ export default function App() {
         <Games onModal={setModal} />
         <Boss />
       </main>
-      <Companion hidden={modal} />
+      <Player hidden={modal} />
       <Toasts />
       <FurCursor />
     </GameProvider>
