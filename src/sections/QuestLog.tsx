@@ -1,108 +1,113 @@
-import { motion, useScroll, useSpring } from 'motion/react'
-import { useRef } from 'react'
-import { Chip, LevelHeader, Reveal, Section, Sparkle } from '../components/ui'
-import { QUESTS, type Quest } from '../data/cv'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { useState } from 'react'
+import { LevelHeader, Section, Window } from '../components/ui'
+import { LEVELS, QUESTS, type Quest } from '../data/cv'
 
-export function QuestLog() {
-  const track = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({ target: track, offset: ['start 70%', 'end 60%'] })
-  const draw = useSpring(scrollYProgress, { stiffness: 120, damping: 24 })
+const L = LEVELS[3]
+const COLORS = ['var(--color-fur)', 'var(--color-sage)', 'var(--color-lilac)']
 
+function Folder({ quest, color, open, onOpen, index }: { quest: Quest; color: string; open: boolean; onOpen: () => void; index: number }) {
+  const reduce = useReducedMotion()
+  const papers = quest.loot.slice(0, 3)
   return (
-    <Section id="quests" className="bg-blush-deep/60">
-      <LevelHeader short="LVL 3" title="Quest Log" blurb="Main quests so far, and the loot from each one." />
-
-      <div ref={track} className="relative">
-        {/* Path: dashed rail + scroll-drawn fill */}
-        <div aria-hidden className="absolute top-0 bottom-0 start-[19px] w-[6px] rounded-full bg-[repeating-linear-gradient(to_bottom,var(--color-ink)_0_10px,transparent_10px_18px)] opacity-25 md:start-1/2 md:-translate-x-1/2" />
-        <motion.div
-          aria-hidden
-          style={{ scaleY: draw }}
-          className="absolute top-0 bottom-0 start-[19px] w-[6px] origin-top rounded-full bg-hot md:start-1/2 md:-translate-x-1/2"
-        />
-
-        <ol className="space-y-16 md:space-y-24">
-          {QUESTS.map((q, i) => (
-            <QuestItem key={q.company} quest={q} index={i} />
-          ))}
-        </ol>
-      </div>
-    </Section>
+    <motion.button
+      onClick={onOpen}
+      aria-expanded={open}
+      initial={reduce ? false : { opacity: 0, y: 70 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-10% 0px' }}
+      transition={{ type: 'spring', stiffness: 120, damping: 16, delay: index * 0.12 }}
+      whileHover="peek"
+      animate={open ? 'peek' : 'rest'}
+      className="group relative block w-full pt-16 text-start"
+    >
+      {/* back panel with tab */}
+      <span className="absolute inset-x-0 top-10 bottom-0 rounded-[22px] brightness-[.93]" style={{ background: color }} />
+      <span className="absolute start-0 top-6 h-10 w-[42%] rounded-t-[18px] brightness-[.93]" style={{ background: color }} />
+      {/* papers peeking out */}
+      {papers.map((p, i) => (
+        <motion.span
+          key={p.title}
+          variants={{ rest: { y: 44, rotate: (i - 1) * 3 }, peek: { y: -44 + i * 27, rotate: (i - 1) * 1.5 } }}
+          transition={{ type: 'spring', stiffness: 260, damping: 20, delay: i * 0.03 }}
+          className="absolute top-8 h-32 w-[70%] truncate rounded-md bg-white px-3 py-1.5 text-[11px] leading-snug font-semibold shadow-soft sm:text-xs"
+          style={{ insetInlineStart: `${8 + i * 7}%`, zIndex: 1 }}
+        >
+          {p.title}
+        </motion.span>
+      ))}
+      {/* front panel */}
+      <span className="relative z-10 block rounded-[22px] p-4 pt-16 shadow-soft sm:p-6 sm:pt-24" style={{ background: color }}>
+        <span className="display block text-2xl sm:text-4xl">{quest.company}</span>
+        <span className="mt-1 block font-serif text-base text-ink-soft italic sm:text-lg">
+          {quest.when}
+          <span className="hidden sm:inline"> · {quest.status === 'active' ? 'active quest' : 'complete'}</span>
+        </span>
+        {quest.status === 'active' && <span className="absolute end-4 top-4 size-3 rounded-full bg-hot ring-4 ring-white/60 motion-safe:animate-pulse" />}
+      </span>
+    </motion.button>
   )
 }
 
-function QuestItem({ quest: q, index }: { quest: Quest; index: number }) {
-  const right = index % 2 === 1
-  return (
-    <li className="relative grid ps-14 md:grid-cols-2 md:ps-0">
-      {/* Node */}
-      <motion.div
-        initial={{ scale: 0, rotate: -90 }}
-        whileInView={{ scale: 1, rotate: 0 }}
-        viewport={{ once: true, margin: '-30% 0px' }}
-        transition={{ type: 'spring', stiffness: 300, damping: 14 }}
-        className={`absolute top-2 start-0 z-10 grid size-11 place-items-center rounded-full border-[3px] border-ink shadow-sticker md:start-1/2 md:-translate-x-1/2 ${
-          q.status === 'active' ? 'bg-hot' : 'bg-lime'
-        }`}
-      >
-        {q.status === 'active' ? (
-          <Sparkle className="size-6 motion-safe:animate-spin-slow" fill="#fff" />
-        ) : (
-          <span className="font-pixel text-sm">✓</span>
-        )}
-      </motion.div>
+export function QuestLog() {
+  const [open, setOpen] = useState(0)
+  const q = QUESTS[open]
 
-      <div className={right ? 'md:col-start-2 md:ps-14' : 'md:pe-14'}>
-        <Reveal y={60}>
-          <article className="rounded-3xl border-[3px] border-ink bg-paper shadow-sticker-lg">
-            <header className="border-b-[3px] border-ink p-5 sm:p-6">
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span
-                  className={`rounded-md border-2 border-ink px-2 py-0.5 font-pixel text-[10px] ${
-                    q.status === 'active' ? 'bg-hot text-white' : 'bg-lime'
-                  }`}
-                >
-                  {q.status === 'active' ? '● ACTIVE QUEST' : 'QUEST COMPLETE'}
-                </span>
-                <span className="font-pixel text-[10px] text-ink-soft">{q.when}</span>
-              </div>
-              <h3 className="font-display text-3xl leading-none font-black">{q.company}</h3>
-              <p className="mt-1 font-semibold text-hot">{q.role}</p>
-              <p className="mt-2 text-ink-soft">{q.tagline}</p>
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {q.stack.map((s) => (
-                  <Chip key={s} tint="lilac">
-                    {s}
-                  </Chip>
-                ))}
-              </div>
-            </header>
-            <ul className="divide-y-2 divide-dashed divide-ink/20">
-              {q.loot.map((l, li) => (
-                <motion.li
-                  key={l.title}
-                  initial={{ opacity: 0, x: right ? 30 : -30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: '-10% 0px' }}
-                  transition={{ delay: li * 0.06, type: 'spring', stiffness: 200, damping: 22 }}
-                  className="flex gap-3 p-5 sm:px-6"
-                >
-                  <span aria-hidden className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg border-2 border-ink bg-bubble font-pixel text-[10px]">
-                    {li + 1}
-                  </span>
-                  <div>
-                    <p className="font-bold">
-                      {l.title}
-                      <span className="ms-2 align-middle font-pixel text-[10px] text-lilac-deep">+LOOT</span>
-                    </p>
-                    <p className="mt-1 text-sm leading-relaxed text-ink-soft">{l.body}</p>
-                  </div>
-                </motion.li>
-              ))}
-            </ul>
-          </article>
-        </Reveal>
+  return (
+    <Section id="quests" className="grain">
+      <LevelHeader short={L.short} title={L.title} accent={L.accent} note="click a folder to open it" />
+
+      <div className="grid grid-cols-3 gap-3 sm:gap-6">
+        {QUESTS.map((quest, i) => (
+          <Folder key={quest.company} quest={quest} color={COLORS[i % 3]} index={i} open={open === i} onOpen={() => setOpen(i)} />
+        ))}
       </div>
-    </li>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={q.company}
+          initial={{ opacity: 0, y: -24, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -12, scale: 0.98 }}
+          transition={{ type: 'spring', stiffness: 220, damping: 24 }}
+          className="mt-10"
+        >
+          <Window title={`~/quests/${q.company.toLowerCase().replace(/\s+/g, '-')}`}>
+            <div className="grid gap-8 p-6 sm:p-10 lg:grid-cols-[1fr_1.6fr]">
+              <div>
+                <p className="font-pixel text-[11px] text-hot">{q.status === 'active' ? '● ACTIVE QUEST' : 'QUEST COMPLETE ✓'}</p>
+                <h3 className="display mt-3 text-5xl">{q.company}</h3>
+                <p className="mt-2 font-serif text-2xl italic">{q.role}</p>
+                <p className="mt-1 text-ink-soft">{q.when}</p>
+                <p className="mt-5 leading-relaxed text-ink-soft">{q.tagline}</p>
+                <div className="mt-5 flex flex-wrap gap-1.5">
+                  {q.stack.map((s) => (
+                    <span key={s} className="rounded-full bg-paper px-3 py-1 text-xs font-semibold">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <ul className="space-y-4">
+                {q.loot.map((l, i) => (
+                  <motion.li
+                    key={l.title}
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + i * 0.07, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className="rounded-2xl bg-paper/70 p-4 sm:p-5"
+                  >
+                    <p className="font-semibold">
+                      {l.title} <span className="ms-1 font-pixel text-[10px] text-hot">+LOOT</span>
+                    </p>
+                    <p className="mt-1 text-[15px] leading-relaxed text-ink-soft">{l.body}</p>
+                  </motion.li>
+                ))}
+              </ul>
+            </div>
+          </Window>
+        </motion.div>
+      </AnimatePresence>
+    </Section>
   )
 }

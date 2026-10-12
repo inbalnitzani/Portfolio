@@ -1,11 +1,51 @@
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useState } from 'react'
-import { LevelHeader, Reveal, Section, tintClass } from '../components/ui'
-import { SKILL_TREE } from '../data/cv'
+import { LevelHeader, Section } from '../components/ui'
+import { LEVELS, SKILL_TREE, type SkillGroup } from '../data/cv'
 import { useGame } from '../game/GameProvider'
 
-export function SkillTree() {
+const L = LEVELS[2]
+
+// Keycap colourways: skirt (sides) + top face gradient
+const CAPS: Record<SkillGroup['tint'], { skirt: string; top: string; text: string }> = {
+  lime: { skirt: '#7ba83c', top: 'linear-gradient(180deg,#c4e58a,#a6d364)', text: '#1d2a0c' },
+  hot: { skirt: '#e58bb4', top: 'linear-gradient(180deg,#ffd3e6,#f7b2d0)', text: '#3b0d22' },
+  lilac: { skirt: '#b9a6f2', top: 'linear-gradient(180deg,#efe9ff,#dccfff)', text: '#22174a' },
+  sky: { skirt: '#8fc3e8', top: 'linear-gradient(180deg,#e2f3ff,#c4e6ff)', text: '#0d2a40' },
+  bubble: { skirt: '#d9d0c2', top: 'linear-gradient(180deg,#ffffff,#f1ece3)', text: '#121212' },
+}
+
+function Keycap({ label, tint, on, onPress, index }: { label: string; tint: SkillGroup['tint']; on: boolean; onPress: () => void; index: number }) {
   const reduce = useReducedMotion()
+  const c = CAPS[tint]
+  return (
+    <motion.button
+      aria-pressed={on}
+      onClick={onPress}
+      initial={reduce ? false : { opacity: 0, y: -40, rotate: index % 2 ? 6 : -6 }}
+      whileInView={{ opacity: 1, y: 0, rotate: 0 }}
+      viewport={{ once: true, margin: '-8% 0px' }}
+      transition={{ type: 'spring', stiffness: 380, damping: 20, delay: index * 0.035 }}
+      className="group relative rounded-[14px] pb-2 text-start"
+      style={{ background: c.skirt, boxShadow: on ? '0 4px 10px -4px rgb(58 42 32 / .35)' : '0 14px 22px -10px rgb(58 42 32 / .45)' }}
+    >
+      <span
+        className="relative block rounded-[11px] px-4 py-3 text-[15px] font-semibold transition-transform duration-100 ease-out group-hover:-translate-y-0.5 group-active:translate-y-1.5"
+        style={{
+          background: c.top,
+          color: c.text,
+          transform: on ? 'translateY(6px)' : undefined,
+          boxShadow: 'inset 0 1.5px 0 rgb(255 255 255 / .7), inset 0 -2px 4px rgb(0 0 0 / .06)',
+        }}
+      >
+        {label}
+        {on && <span className="absolute -end-1.5 -top-1.5 size-3 rounded-full bg-hot ring-2 ring-white" />}
+      </span>
+    </motion.button>
+  )
+}
+
+export function SkillTree() {
   const { notify } = useGame()
   const [equipped, setEquipped] = useState<Set<string>>(new Set())
   const total = SKILL_TREE.reduce((n, g) => n + g.items.length, 0)
@@ -15,80 +55,32 @@ export function SkillTree() {
     if (next.has(skill)) next.delete(skill)
     else next.add(skill)
     setEquipped(next)
-    if (next.size === total) notify('Completionist!', 'You equipped every skill. Hire her already ♡')
+    if (next.size === total) notify('Completionist!', 'Every skill equipped. Hire her already ♡')
   }
 
   return (
-    <Section id="skills">
-      <LevelHeader
-        short="LVL 2"
-        title="Skill Tree"
-        blurb="Press the keys to equip skills to your loadout."
-      />
+    <Section id="skills" className="bg-paper-2">
+      <LevelHeader short={L.short} title={L.title} accent={L.accent} note="press a key to equip it ↓" />
 
-      <Reveal className="mb-8 flex flex-wrap items-center gap-3">
-        <span className="rounded-xl border-[3px] border-ink bg-ink px-3 py-1.5 font-pixel text-xs text-lime tabular-nums">
+      <div className="mb-10 flex items-center gap-4">
+        <span className="rounded-full bg-white px-4 py-2 font-pixel text-[11px] tabular-nums shadow-soft">
           LOADOUT {equipped.size}/{total}
         </span>
-        <AnimatePresence>
-          {equipped.size > 0 && (
-            <motion.button
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setEquipped(new Set())}
-              className="font-pixel text-xs text-ink-soft underline underline-offset-4"
-            >
-              reset
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </Reveal>
+        {equipped.size > 0 && (
+          <button onClick={() => setEquipped(new Set())} className="text-sm text-ink-soft underline underline-offset-4">
+            reset
+          </button>
+        )}
+      </div>
 
-      <div className="space-y-10">
-        {SKILL_TREE.map((group, gi) => (
-          <div key={group.name} className="grid gap-4 md:grid-cols-[11rem_1fr] md:gap-8">
-            <Reveal y={20} delay={gi * 0.05}>
-              <div className="flex items-center gap-3 md:flex-col md:items-start">
-                <span className={`rounded-lg border-2 border-ink px-2 py-0.5 font-pixel text-[10px] ${tintClass(group.tint)}`}>
-                  BRANCH {String(gi + 1).padStart(2, '0')}
-                </span>
-                <h3 className="font-display text-xl font-bold">{group.name}</h3>
-              </div>
-            </Reveal>
+      <div className="space-y-12">
+        {SKILL_TREE.map((group) => (
+          <div key={group.name} className="grid gap-4 md:grid-cols-[12rem_1fr] md:gap-8">
+            <h3 className="font-serif text-3xl italic md:pt-2">{group.name}</h3>
             <div className="flex flex-wrap gap-x-3 gap-y-4">
-              {group.items.map((skill, i) => {
-                const on = equipped.has(skill)
-                return (
-                  <motion.button
-                    key={skill}
-                    aria-pressed={on}
-                    onClick={() => toggle(skill)}
-                    initial={reduce ? false : { opacity: 0, y: -30, rotate: i % 2 ? 8 : -8 }}
-                    whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-                    viewport={{ once: true, margin: '-8% 0px' }}
-                    transition={{ type: 'spring', stiffness: 420, damping: 18, delay: i * 0.04 }}
-                    whileHover={{ y: -3 }}
-                    whileTap={{ y: 5 }}
-                    className={`relative rounded-xl border-[3px] border-ink px-4 pt-2 pb-3 text-sm font-bold transition-[box-shadow,background-color] duration-150 ${
-                      on ? `${tintClass(group.tint)} translate-y-1 shadow-[0_2px_0_0_var(--color-ink)]` : 'bg-paper shadow-key'
-                    }`}
-                  >
-                    {/* keycap top highlight */}
-                    <span aria-hidden className="pointer-events-none absolute inset-x-2 top-1 h-1.5 rounded-full bg-white/50" />
-                    {skill}
-                    {on && (
-                      <motion.span
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -end-2 -top-2 grid size-5 place-items-center rounded-full border-2 border-ink bg-lime font-pixel text-[9px] text-ink"
-                      >
-                        ✓
-                      </motion.span>
-                    )}
-                  </motion.button>
-                )
-              })}
+              {group.items.map((skill, i) => (
+                <Keycap key={skill} label={skill} tint={group.tint} index={i} on={equipped.has(skill)} onPress={() => toggle(skill)} />
+              ))}
             </div>
           </div>
         ))}

@@ -14,13 +14,6 @@ export const PROFILE = {
     itch: 'https://inbalnitzani.itch.io/',
   },
   bio: 'I build distributed backends on AWS and Kubernetes, the React interfaces on top of them, and AI-powered developer tooling with the Claude Agent SDK. By night I make games and I’m finishing an M.Des in Game Design. Curious by nature: when I spot a gap, I build a tool for it.',
-  stats: [
-    { label: 'Backend', value: 92 },
-    { label: 'Frontend', value: 86 },
-    { label: 'Cloud / Infra', value: 84 },
-    { label: 'Game Dev', value: 78 },
-    { label: 'Curiosity', value: 100 },
-  ],
   traits: [
     'Sole-owner energy: backend to UI, end to end',
     'Ex-IDF Maglan, Head of Media Dept.',
@@ -28,6 +21,17 @@ export const PROFILE = {
     'Lone Soldiers Center volunteer since 2017',
   ],
 }
+
+/** The "Meet the player" receipt — one line per item, right column is the price tag */
+export const RECEIPT: [string, string][] = [
+  ['B.Sc Computer Science', '2023'],
+  ['M.Des Game Design, Shenkar', 'WIP'],
+  ['IDF Maglan, Head of Media', '15–17'],
+  ['Platform engineer', 'Whalo'],
+  ['Sole frontend engineer', 'NanoLock'],
+  ['Volunteer skipper asst.', 'Etgarim'],
+  ['Curiosity', '∞'],
+]
 
 export const SAVE_POINTS = [
   {
@@ -253,13 +257,13 @@ export const SIDE_QUESTS: SideQuest[] = [
 ]
 
 export const LEVELS = [
-  { id: 'start', short: 'START', title: 'Press Start' },
-  { id: 'profile', short: 'LVL 1', title: 'Player Profile' },
-  { id: 'skills', short: 'LVL 2', title: 'Skill Tree' },
-  { id: 'quests', short: 'LVL 3', title: 'Quest Log' },
-  { id: 'games', short: 'LVL 4', title: 'Games I Made' },
-  { id: 'side', short: 'LVL 5', title: 'Side Quests' },
-  { id: 'boss', short: 'BOSS', title: 'Final Boss' },
+  { id: 'start', short: 'START', title: 'Press', accent: 'start' },
+  { id: 'profile', short: 'LVL 1', title: 'Meet the', accent: 'player' },
+  { id: 'skills', short: 'LVL 2', title: 'Skill', accent: 'tree' },
+  { id: 'quests', short: 'LVL 3', title: 'Quests', accent: 'tucked inside' },
+  { id: 'games', short: 'LVL 4', title: 'Games', accent: 'I made' },
+  { id: 'side', short: 'LVL 5', title: 'Side', accent: 'quests' },
+  { id: 'boss', short: 'BOSS', title: 'Final', accent: 'boss' },
 ] as const
 
 export type LevelId = (typeof LEVELS)[number]['id']

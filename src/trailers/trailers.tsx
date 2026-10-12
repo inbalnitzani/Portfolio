@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
-import { CountUp, TrailerPlayer, Typewriter, type Scene } from './TrailerPlayer'
+import { CountUp, TrailerPlayer, Typewriter, type Scene } from './PaintPlayer'
 
 // Shared pop-in for scene elements
 const pop = (delay = 0) => ({
@@ -10,7 +10,7 @@ const pop = (delay = 0) => ({
 })
 
 function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-2xl border-[3px] border-ink bg-paper shadow-sticker ${className}`}>{children}</div>
+  return <div className={`rounded-2xl ring-1 ring-ink/10 bg-white shadow-soft ${className}`}>{children}</div>
 }
 
 /* ───────────────────────── Yair Nitzani Music ───────────────────────── */
@@ -33,7 +33,7 @@ function MusicScene({ scene }: { scene: number }) {
     return (
       <Card className="w-full max-w-md p-4">
         <p className="mb-2 font-pixel text-[10px] text-ink-soft">SEARCH CATALOG</p>
-        <div className="flex items-center gap-2 rounded-xl border-2 border-ink bg-blush px-3 py-2.5">
+        <div className="flex items-center gap-2 rounded-xl ring-1 ring-ink/10 bg-blush px-3 py-2.5">
           <span aria-hidden>⌕</span>
           <Typewriter text="upbeat summer ad" className="font-semibold" />
         </div>
@@ -44,14 +44,14 @@ function MusicScene({ scene }: { scene: number }) {
       <Card className="w-full max-w-md divide-y-2 divide-ink/10 overflow-hidden">
         {SONGS.map((s, i) => (
           <motion.div key={s.t} {...pop(i * 0.15)} className="flex items-center gap-3 p-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-lg border-2 border-ink bg-hot text-white">♪</span>
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg ring-1 ring-ink/10 bg-hot text-white">♪</span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold">{s.t}</p>
               <p className="text-xs text-ink-soft">{s.w}</p>
             </div>
             <div className="hidden gap-1 sm:flex">
               {s.tags.map((t) => (
-                <span key={t} className="rounded-full border-2 border-ink bg-lilac px-2 text-[10px] font-bold">
+                <span key={t} className="rounded-full ring-1 ring-ink/10 bg-lilac px-2 text-[10px] font-bold">
                   {t}
                 </span>
               ))}
@@ -71,13 +71,13 @@ function MusicScene({ scene }: { scene: number }) {
             ['Territory', 'Worldwide'],
             ['Term', '1 year'],
           ].map(([k, v], i) => (
-            <motion.div key={k} {...pop(i * 0.12)} className="rounded-lg border-2 border-ink bg-blush px-2 py-1.5">
+            <motion.div key={k} {...pop(i * 0.12)} className="rounded-lg ring-1 ring-ink/10 bg-blush px-2 py-1.5">
               <span className="block text-[10px] text-ink-soft">{k}</span>
               <span className="font-bold">{v}</span>
             </motion.div>
           ))}
         </div>
-        <motion.div {...pop(0.6)} className="mt-3 flex items-center justify-between rounded-xl border-2 border-ink bg-lime px-3 py-2">
+        <motion.div {...pop(0.6)} className="mt-3 flex items-center justify-between rounded-xl ring-1 ring-ink/10 bg-key px-3 py-2">
           <span className="font-pixel text-[10px]">QUOTE (DEMO)</span>
           <CountUp to={4800} ms={1100} className="font-display text-xl font-black" />
         </motion.div>
@@ -88,14 +88,14 @@ function MusicScene({ scene }: { scene: number }) {
     )
   return (
     <div className="flex w-full max-w-lg flex-col gap-3">
-      <motion.div {...pop()} className="max-w-[80%] self-start rounded-2xl rounded-es-none border-[3px] border-ink bg-paper px-3 py-2 text-sm shadow-sticker">
+      <motion.div {...pop()} className="max-w-[80%] self-start rounded-2xl rounded-es-none ring-1 ring-ink/10 bg-white px-3 py-2 text-sm shadow-soft">
         “Hopeful, sunny track for a travel brand. Lyrics about the open road.”
       </motion.div>
-      <motion.div {...pop(0.5)} className="self-end rounded-2xl rounded-ee-none border-[3px] border-ink bg-ink px-3 py-2 text-sm text-white shadow-sticker">
-        <p className="mb-1 font-pixel text-[10px] text-lime">CLAUDE SKILL · SHORTLIST</p>
+      <motion.div {...pop(0.5)} className="self-end rounded-2xl rounded-ee-none ring-1 ring-ink/10 bg-ink px-3 py-2 text-sm text-white shadow-soft">
+        <p className="mb-1 font-pixel text-[10px] text-key">CLAUDE SKILL · SHORTLIST</p>
         {SONGS.slice(0, 2).map((s, i) => (
           <motion.p key={s.t} {...pop(0.9 + i * 0.25)}>
-            ♪ {s.t} <span className="text-lime">· lyrical fit ✓</span>
+            ♪ {s.t} <span className="text-key">· lyrical fit ✓</span>
           </motion.p>
         ))}
       </motion.div>
@@ -117,14 +117,14 @@ const TRAK_SCENES: Scene[] = [
 ]
 
 const ROWS = [
-  { m: 'Coffee Lab', c: 'Food', a: 18, tint: 'bg-bubble' },
-  { m: 'Super Yuda', c: 'Groceries', a: 236, tint: 'bg-lime' },
+  { m: 'Coffee Lab', c: 'Food', a: 18, tint: 'bg-fur' },
+  { m: 'Super Yuda', c: 'Groceries', a: 236, tint: 'bg-key' },
   { m: 'Rav-Kav', c: 'Transport', a: 50, tint: 'bg-sky' },
 ]
 
 const CATS = [
-  { c: 'Groceries', pct: 34, tint: 'bg-lime' },
-  { c: 'Food', pct: 22, tint: 'bg-bubble' },
+  { c: 'Groceries', pct: 34, tint: 'bg-key' },
+  { c: 'Food', pct: 22, tint: 'bg-fur' },
   { c: 'Bills', pct: 20, tint: 'bg-lilac' },
   { c: 'Fun', pct: 14, tint: 'bg-hot' },
   { c: 'Transport', pct: 10, tint: 'bg-sky' },
@@ -132,7 +132,7 @@ const CATS = [
 
 function Phone({ children }: { children: ReactNode }) {
   return (
-    <div className="relative h-full max-h-[320px] w-[210px] rounded-[30px] border-[3px] border-ink bg-paper p-3 pt-6 shadow-sticker">
+    <div className="relative h-full max-h-[320px] w-[210px] rounded-[30px] ring-1 ring-ink/10 bg-white p-3 pt-6 shadow-soft">
       <span className="absolute top-2 left-1/2 h-1.5 w-12 -translate-x-1/2 rounded-full bg-ink" />
       <p className="mb-2 font-display text-sm font-black text-hot">Trakaboo 👀</p>
       {children}
@@ -148,9 +148,9 @@ function TrakabooScene({ scene }: { scene: number }) {
           initial={{ y: -60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.3 }}
-          className="flex w-64 items-center gap-3 rounded-2xl border-[3px] border-ink bg-paper/95 p-3 shadow-sticker"
+          className="flex w-64 items-center gap-3 rounded-2xl ring-1 ring-ink/10 bg-white/95 p-3 shadow-soft"
         >
-          <span className="grid size-9 place-items-center rounded-xl border-2 border-ink bg-ink text-xs font-bold text-white">Pay</span>
+          <span className="grid size-9 place-items-center rounded-xl ring-1 ring-ink/10 bg-ink text-xs font-bold text-white">Pay</span>
           <div className="text-sm">
             <p className="font-bold">Coffee Lab</p>
             <p className="text-ink-soft">₪18.00 · Visa ••12</p>
@@ -159,7 +159,7 @@ function TrakabooScene({ scene }: { scene: number }) {
         <motion.div
           animate={{ scale: [1, 1.15, 1] }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="grid size-16 place-items-center rounded-full border-[3px] border-ink bg-lime font-pixel text-lg shadow-sticker"
+          className="grid size-16 place-items-center rounded-full ring-1 ring-ink/10 bg-key font-pixel text-lg shadow-soft"
         >
           ))
         </motion.div>
@@ -173,9 +173,9 @@ function TrakabooScene({ scene }: { scene: number }) {
             <motion.div
               key={r.m}
               {...pop(i === 0 ? 0.35 : 0)}
-              className={`flex items-center gap-2 rounded-xl border-2 border-ink p-1.5 text-[11px] ${i === 0 ? 'bg-blush' : 'bg-paper'}`}
+              className={`flex items-center gap-2 rounded-xl ring-1 ring-ink/10 p-1.5 text-[11px] ${i === 0 ? 'bg-blush' : 'bg-white'}`}
             >
-              <span className={`size-5 rounded-md border-2 border-ink ${r.tint}`} />
+              <span className={`size-5 rounded-md ring-1 ring-ink/10 ${r.tint}`} />
               <span className="flex-1">
                 <span className="block font-bold">{r.m}</span>
                 <span className="text-ink-soft">{r.c}</span>
@@ -192,17 +192,17 @@ function TrakabooScene({ scene }: { scene: number }) {
   if (scene === 2)
     return (
       <Card className="w-72 p-4">
-        <div className="flex items-center gap-2 rounded-xl border-2 border-dashed border-ink bg-blush p-3 text-sm font-semibold">
+        <div className="flex items-center gap-2 rounded-xl border-2 border-dashed border-ink/30 bg-blush p-3 text-sm font-semibold">
           📄 cal-statement.xlsx
         </div>
-        <div className="mt-3 h-3 overflow-hidden rounded-full border-2 border-ink bg-blush">
+        <div className="mt-3 h-3 overflow-hidden rounded-full ring-1 ring-ink/10 bg-blush">
           <motion.div className="h-full bg-hot" initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 1.3 }} />
         </div>
         <motion.div {...pop(1.4)} className="mt-3 flex items-center justify-between text-sm">
           <span>
             <b>42</b> imported
           </span>
-          <span className="rounded-full border-2 border-ink bg-lime px-2 text-xs font-bold">3 duplicates merged</span>
+          <span className="rounded-full ring-1 ring-ink/10 bg-key px-2 text-xs font-bold">3 duplicates merged</span>
         </motion.div>
       </Card>
     )
@@ -212,11 +212,11 @@ function TrakabooScene({ scene }: { scene: number }) {
       <p className="font-display text-2xl font-black">
         ₪<CountUp to={4210} />
       </p>
-      <div className="mt-2 flex h-4 overflow-hidden rounded-full border-2 border-ink">
+      <div className="mt-2 flex h-4 overflow-hidden rounded-full ring-1 ring-ink/10">
         {CATS.map((c, i) => (
           <motion.div
             key={c.c}
-            className={`h-full ${c.tint} ${i ? 'border-s-2 border-ink' : ''}`}
+            className={`h-full ${c.tint} ${i ? 'border-s-2 border-white' : ''}`}
             initial={{ width: 0 }}
             animate={{ width: `${c.pct}%` }}
             transition={{ delay: 0.3 + i * 0.12, type: 'spring', stiffness: 120, damping: 18 }}
@@ -225,8 +225,8 @@ function TrakabooScene({ scene }: { scene: number }) {
       </div>
       <div className="mt-2 grid grid-cols-2 gap-1">
         {CATS.slice(0, 4).map((c, i) => (
-          <motion.div key={c.c} {...pop(0.8 + i * 0.08)} className="flex items-center gap-1 rounded-lg border-2 border-ink p-1 text-[10px]">
-            <span className={`size-2.5 rounded-full border border-ink ${c.tint}`} />
+          <motion.div key={c.c} {...pop(0.8 + i * 0.08)} className="flex items-center gap-1 rounded-lg ring-1 ring-ink/10 p-1 text-[10px]">
+            <span className={`size-2.5 rounded-full ring-1 ring-ink/10 ${c.tint}`} />
             {c.c} <b className="ms-auto">{c.pct}%</b>
           </motion.div>
         ))}
@@ -255,7 +255,7 @@ function RouterScene({ scene }: { scene: number }) {
     <div className="grid w-full max-w-lg grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
       <div className="space-y-2">
         {SOURCES.map((s, i) => (
-          <motion.div key={s} {...pop(i * 0.1)} className="rounded-xl border-[3px] border-ink bg-paper px-2 py-1.5 text-center text-xs font-bold shadow-sticker">
+          <motion.div key={s} {...pop(i * 0.1)} className="rounded-xl ring-1 ring-ink/10 bg-white px-2 py-1.5 text-center text-xs font-bold shadow-soft">
             {s}
           </motion.div>
         ))}
@@ -266,7 +266,7 @@ function RouterScene({ scene }: { scene: number }) {
           [0, 1, 2].map((i) => (
             <motion.span
               key={i}
-              className="absolute top-1/2 size-3 rounded-full border-2 border-ink bg-lime"
+              className="absolute top-1/2 size-3 rounded-full ring-1 ring-ink/10 bg-key"
               initial={{ x: -90, y: (i - 1) * 40, opacity: 0 }}
               animate={{ x: 0, y: 0, opacity: [0, 1, 1, 0] }}
               transition={{ duration: 1, delay: 0.3 + i * 0.35, repeat: Infinity, repeatDelay: 0.4 }}
@@ -275,7 +275,7 @@ function RouterScene({ scene }: { scene: number }) {
         <motion.div
           animate={scene === 1 ? { rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] } : {}}
           transition={{ duration: 0.6, repeat: scene === 1 ? Infinity : 0, repeatDelay: 0.5 }}
-          className="grid size-20 place-items-center rounded-2xl border-[3px] border-ink bg-hot text-center font-pixel text-[10px] leading-tight text-white shadow-sticker"
+          className="grid size-20 place-items-center rounded-2xl ring-1 ring-ink/10 bg-hot text-center font-pixel text-[10px] leading-tight text-white shadow-soft"
         >
           WEBHOOK
           <br />
@@ -288,8 +288,8 @@ function RouterScene({ scene }: { scene: number }) {
           <motion.div
             key={s}
             {...pop(scene >= 1 ? 0.3 + i * 0.15 : 0)}
-            className={`rounded-xl border-[3px] border-ink px-2 py-1.5 text-center text-xs font-bold shadow-sticker ${
-              scene >= 1 && i < 2 ? 'bg-lime' : 'bg-lilac'
+            className={`rounded-xl ring-1 ring-ink/10 px-2 py-1.5 text-center text-xs font-bold shadow-soft ${
+              scene >= 1 && i < 2 ? 'bg-key' : 'bg-lilac'
             }`}
           >
             /{s}
@@ -298,8 +298,8 @@ function RouterScene({ scene }: { scene: number }) {
       </div>
 
       {scene === 2 && (
-        <motion.div {...pop(0.2)} className="col-span-3 rounded-2xl border-[3px] border-ink bg-ink p-3 text-xs text-white shadow-sticker">
-          <p className="font-pixel text-[10px] text-lime">CLAUDE · OUTPUT</p>
+        <motion.div {...pop(0.2)} className="col-span-3 rounded-2xl ring-1 ring-ink/10 bg-ink p-3 text-xs text-white shadow-soft">
+          <p className="font-pixel text-[10px] text-key">CLAUDE · OUTPUT</p>
           <motion.p {...pop(0.5)}>✓ Ticket triaged: priority + owner suggested</motion.p>
           <motion.p {...pop(0.9)}>✓ PR reviewed: 2 comments posted</motion.p>
         </motion.div>

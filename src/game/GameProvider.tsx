@@ -56,7 +56,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (visited.has(current)) return
     setVisited((v) => new Set(v).add(current))
     const level = LEVELS.find((l) => l.id === current)!
-    notify('Achievement unlocked', `Reached ${level.short}: ${level.title}  +100 XP`)
+    notify("Achievement unlocked", `Reached ${level.title} ${level.accent}  +100 XP`)
   }, [current, visited, notify])
 
   return (
