@@ -6,53 +6,109 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 // Big on purpose. The arrow tip (the hotspot) sits ~7% in from the image's top-left.
 const W = 130
 const H = Math.round((W * 520) / 425)
-const TIP_X = Math.round(W * 0.067)
-const TIP_Y = Math.round(H * 0.07)
+const PAD = 22 // room for hair to stick out past the silhouette
+const TIP_X = Math.round(W * 0.067) + PAD
+const TIP_Y = Math.round(H * 0.07) + PAD
+const STRANDS = 1400
+const FLOW = 1.05 // the fur lies down-right, away from the tip (radians)
+
+type Strand = {
+  x: number
+  y: number
+  len: number
+  angle: number
+  width: number
+  r: number
+  g: number
+  b: number
+  phase: number
+  edge: boolean
+}
 
 /**
- * Fur cursor. The arrow itself is rigid and follows the pointer exactly; only the fur moves.
- * An SVG filter splits the image into a solid core (alpha eroded) and an outer band of hair.
- * The band is displaced by drifting noise, biased against the direction of travel, so the hair
- * tips trail behind like fur in the wind while the silhouette keeps its shape. A finer noise
- * makes the strands inside shimmer. Fluff sheds when you move fast.
- * One rAF loop writing attributes directly — no React renders per frame.
- * Off for touch devices and reduced motion (the system cursor stays).
+ * Fur cursor, drawn as real hair. The arrow body (the fur photo) is rigid and follows the
+ * pointer exactly; on top, ~1,400 fine strands grow out of it. Slow wind ripples travel across
+ * them, each strand catches a sheen as it tilts, and when you move the strands drag behind and
+ * settle. Only the hair moves — the shape never bends.
+ * Canvas 2D, one rAF loop, no React renders per frame. Off for touch and reduced motion.
  */
 export function FurCursor() {
   const root = useRef<HTMLDivElement>(null)
-  const wind = useRef<SVGFETurbulenceElement>(null)
-  const windMap = useRef<SVGFEDisplacementMapElement>(null)
-  const biasR = useRef<SVGFEFuncRElement>(null)
-  const biasG = useRef<SVGFEFuncGElement>(null)
-  const shimmer = useRef<SVGFETurbulenceElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     const el = root.current
-    const n = wind.current
-    const m = windMap.current
-    const br = biasR.current
-    const bg = biasG.current
-    const sh = shimmer.current
-    if (!el || !n || !m || !br || !bg || !sh) return
+    const canvas = canvasRef.current
+    if (!el || !canvas) return
     if (!matchMedia('(pointer: fine)').matches) return
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const dpr = Math.min(2, devicePixelRatio || 1)
+    const CW = W + PAD * 2
+    const CH = H + PAD * 2
+    canvas.width = CW * dpr
+    canvas.height = CH * dpr
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.lineCap = 'round'
+
     const html = document.documentElement
+    const img = new Image()
+    img.src = '/cursor-fur.png'
+    let strands: Strand[] = []
+
+    // Grow strands from the image: roots where the fur is, colours sampled from it
+    img.onload = () => {
+      const off = document.createElement('canvas')
+      off.width = W
+      off.height = H
+      const o = off.getContext('2d', { willReadFrequently: true })!
+      o.drawImage(img, 0, 0, W, H)
+      const px = o.getImageData(0, 0, W, H).data
+      const alpha = (x: number, y: number) => (x < 0 || y < 0 || x >= W || y >= H ? 0 : px[(Math.floor(y) * W + Math.floor(x)) * 4 + 3])
+      let tries = 0
+      while (strands.length < STRANDS && tries++ < STRANDS * 20) {
+        const x = Math.random() * W
+        const y = Math.random() * H
+        if (alpha(x, y) < 160) continue
+        const i = (Math.floor(y) * W + Math.floor(x)) * 4
+        // near the outline? look a few px out along the flow and sideways
+        const edge = alpha(x + 7, y + 7) < 60 || alpha(x - 7, y) < 60 || alpha(x + 7, y - 4) < 60 || alpha(x, y + 8) < 60
+        strands.push({
+          x: x + PAD,
+          y: y + PAD,
+          len: edge ? 10 + Math.random() * 14 : 5 + Math.random() * 9,
+          angle: FLOW + (Math.random() - 0.5) * (edge ? 1.2 : 0.7),
+          width: 0.45 + Math.random() * 0.75,
+          r: px[i],
+          g: px[i + 1],
+          b: px[i + 2],
+          phase: Math.random() * Math.PI * 2,
+          edge,
+        })
+      }
+      // draw edge hair last so it sits on top and reads as the fluffy outline
+      strands = strands.sort((a, b) => Number(a.edge) - Number(b.edge))
+    }
 
     let x = innerWidth / 2,
       y = innerHeight / 2,
-      px = x,
-      py = y,
+      lx = x,
+      ly = y,
       vx = 0,
-      vy = 0
+      vy = 0,
+      dragX = 0,
+      dragY = 0
     let gust = 0,
       press = 0,
       puff = 0
     let hover = false,
       down = false,
       seen = false
-    let t = 0,
-      raf = 0,
+    let raf = 0,
       lastFluff = 0
+    const t0 = performance.now()
 
     const onMove = (e: PointerEvent) => {
       if (e.pointerType !== 'mouse') return
@@ -60,8 +116,8 @@ export function FurCursor() {
       y = e.clientY
       if (!seen) {
         seen = true
-        px = x
-        py = y
+        lx = x
+        ly = y
         html.classList.add('fur-on')
         el.style.opacity = '1'
       }
@@ -75,55 +131,69 @@ export function FurCursor() {
 
     const shed = (speed: number) => {
       const now = performance.now()
-      if (speed < 16 || now - lastFluff < 34) return
+      if (speed < 18 || now - lastFluff < 40 || !strands.length) return
       lastFluff = now
+      const s = strands[Math.floor(Math.random() * strands.length)]
       const f = document.createElement('span')
-      const len = 10 + Math.random() * 12
       f.className = 'pointer-events-none fixed top-0 left-0 z-[9998] rounded-full'
-      f.style.cssText += `width:${len}px;height:2px;background:${Math.random() > 0.5 ? '#f6a9cb' : '#f2b9d2'};`
-      // spawn somewhere on the fur, blown opposite to the motion
-      const ox = TIP_X + Math.random() * W * 0.55
-      const oy = TIP_Y + Math.random() * H * 0.75
-      const ang = Math.atan2(-vy, -vx) + (Math.random() - 0.5) * 0.8
-      const dist = 40 + Math.random() * 60
-      f.style.translate = `${x - TIP_X + ox}px ${y - TIP_Y + oy}px`
+      f.style.cssText += `width:${12 + Math.random() * 12}px;height:1.5px;background:rgb(${s.r},${s.g},${s.b});`
+      const ang = Math.atan2(-vy, -vx) + (Math.random() - 0.5) * 0.7
+      const dist = 50 + Math.random() * 70
+      f.style.translate = `${x - TIP_X + s.x}px ${y - TIP_Y + s.y}px`
       document.body.appendChild(f)
       f.animate(
         [
           { transform: `rotate(${ang}rad)`, opacity: 0.9 },
-          { transform: `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist + 26}px) rotate(${ang + 1.8}rad) scale(0.5)`, opacity: 0 },
+          { transform: `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist + 30}px) rotate(${ang + 1.6}rad) scale(0.6)`, opacity: 0 },
         ],
-        { duration: 900 + Math.random() * 500, easing: 'cubic-bezier(.2,.7,.3,1)' },
+        { duration: 1000 + Math.random() * 600, easing: 'cubic-bezier(.2,.7,.3,1)' },
       ).onfinish = () => f.remove()
     }
 
-    const frame = () => {
-      t += 1
-      // smoothed velocity gives the fur a sense of mass
-      vx = lerp(vx, x - px, 0.25)
-      vy = lerp(vy, y - py, 0.25)
-      px = x
-      py = y
+    const frame = (now: number) => {
+      const t = (now - t0) / 1000
+      vx = lerp(vx, x - lx, 0.25)
+      vy = lerp(vy, y - ly, 0.25)
+      lx = x
+      ly = y
       const speed = Math.hypot(vx, vy)
-
-      gust = lerp(gust, clamp(speed / 22, 0, 1), 0.12)
+      gust = lerp(gust, clamp(speed / 25, 0, 1), 0.1)
       puff = lerp(puff, hover ? 1 : 0, 0.12)
       press = lerp(press, down ? 1 : 0, 0.3)
+      // hair drags behind the motion with a springy lag, then settles
+      dragX = lerp(dragX, clamp(-vx * 0.9, -14, 14), 0.12)
+      dragY = lerp(dragY, clamp(-vy * 0.9, -14, 14), 0.12)
 
-      // rigid: position + a uniform press (never skewed or stretched)
-      el.style.transform = `translate3d(${x - TIP_X}px, ${y - TIP_Y}px, 0) scale(${1 + puff * 0.06 - press * 0.08})`
+      // rigid: position + a uniform press/puff (never skewed or stretched)
+      el.style.transform = `translate3d(${x - TIP_X}px, ${y - TIP_Y}px, 0) scale(${1 + puff * 0.05 - press * 0.07})`
 
-      // Hair tips: a soft breeze at rest, long sweeps in a gust, a little fluffier over buttons
-      m.setAttribute('scale', (5 + gust * 20 + puff * 4 + Math.sin(t / 37) * 1.2).toFixed(2))
-      // Push the tips opposite to the motion (displacement samples from +bias, so hair moves -bias)
-      const bx = clamp(vx / 30, -0.32, 0.32)
-      const by = clamp(vy / 30, -0.32, 0.32) - 0.04 // a hint of gravity
-      br.setAttribute('intercept', (0.25 + bx).toFixed(3))
-      bg.setAttribute('intercept', (0.25 + by).toFixed(3))
-      // drift the noise so the strands keep moving (faster in a gust)
-      const k = 1 + gust * 2.5
-      n.setAttribute('baseFrequency', `${(0.045 + Math.sin((t * k) / 70) * 0.008).toFixed(4)} ${(0.11 + Math.cos((t * k) / 55) * 0.015).toFixed(4)}`)
-      sh.setAttribute('baseFrequency', `${(0.32 + Math.sin(t / 45) * 0.03).toFixed(3)}`)
+      ctx.clearRect(0, 0, CW, CH)
+      if (img.complete) ctx.drawImage(img, PAD, PAD, W, H)
+
+      // wind: a slow wave rolling diagonally across the fur, stronger in a gust
+      const amp = 0.22 + gust * 0.35 + puff * 0.12
+      const lift = 1 + puff * 0.25
+      for (const s of strands) {
+        const wave = Math.sin(s.x * 0.06 + s.y * 0.045 - t * 2.1 + s.phase * 0.35) + 0.45 * Math.sin(s.y * 0.11 - t * 3.3 + s.phase)
+        const a = s.angle + wave * amp
+        const L = s.len * lift
+        const k = L / 20
+        const tx = s.x + Math.cos(a) * L + dragX * k
+        const ty = s.y + Math.sin(a) * L + dragY * k + 0.6 * k // a touch of gravity
+        const cx = s.x + Math.cos(s.angle + wave * amp * 0.4) * L * 0.55 + dragX * k * 0.3
+        const cy = s.y + Math.sin(s.angle + wave * amp * 0.4) * L * 0.55 + dragY * k * 0.3
+        // sheen: strands tilted toward the light pick up a white highlight
+        const sheen = clamp(Math.cos(a + 0.9) * 0.5 + 0.5, 0, 1) ** 3
+        const r = Math.round(s.r + (255 - s.r) * sheen * 0.9)
+        const g = Math.round(s.g + (255 - s.g) * sheen * 0.9)
+        const b = Math.round(s.b + (255 - s.b) * sheen * 0.9)
+        ctx.strokeStyle = `rgba(${r},${g},${b},${s.edge ? 0.85 : 0.62})`
+        ctx.lineWidth = s.width
+        ctx.beginPath()
+        ctx.moveTo(s.x, s.y)
+        ctx.quadraticCurveTo(cx, cy, tx, ty)
+        ctx.stroke()
+      }
 
       shed(speed)
       raf = requestAnimationFrame(frame)
@@ -147,42 +217,13 @@ export function FurCursor() {
   }, [])
 
   return (
-    <>
-      <svg width="0" height="0" className="absolute" aria-hidden>
-        <filter id="fur-wind" x="-25%" y="-25%" width="150%" height="150%" colorInterpolationFilters="sRGB">
-          {/* outer hair: drifting noise, biased against the motion, displaces the edge band */}
-          <feTurbulence ref={wind} type="fractalNoise" baseFrequency="0.045 0.11" numOctaves={3} seed={11} result="noise" />
-          <feComponentTransfer in="noise" result="windField">
-            <feFuncR ref={biasR} type="linear" slope="0.5" intercept="0.25" />
-            <feFuncG ref={biasG} type="linear" slope="0.5" intercept="0.25" />
-          </feComponentTransfer>
-          <feDisplacementMap ref={windMap} in="SourceGraphic" in2="windField" scale={5} xChannelSelector="R" yChannelSelector="G" result="blown" />
-          {/* inner strands: fine, small shimmer that can't change the outline */}
-          <feTurbulence ref={shimmer} type="fractalNoise" baseFrequency="0.32" numOctaves={1} seed={3} result="fine" />
-          <feDisplacementMap in="SourceGraphic" in2="fine" scale={2.2} xChannelSelector="R" yChannelSelector="G" result="shimmered" />
-          {/* solid core = the silhouette shrunk a few px; it never moves */}
-          <feMorphology in="SourceAlpha" operator="erode" radius={7} result="core" />
-          <feGaussianBlur in="core" stdDeviation={2.5} result="softCore" />
-          <feComposite in="shimmered" in2="softCore" operator="in" result="body" />
-          <feMerge>
-            <feMergeNode in="blown" />
-            <feMergeNode in="body" />
-          </feMerge>
-        </filter>
-      </svg>
-      <div
-        ref={root}
-        aria-hidden
-        className="pointer-events-none fixed top-0 left-0 z-[9999] opacity-0 transition-opacity duration-200 will-change-transform"
-        style={{ width: W, height: H, transformOrigin: `${TIP_X}px ${TIP_Y}px` }}
-      >
-        <img
-          src="/cursor-fur.png"
-          alt=""
-          className="block h-full w-full max-w-none"
-          style={{ filter: 'url(#fur-wind) drop-shadow(0 10px 12px rgb(58 42 32 / 0.28))' }}
-        />
-      </div>
-    </>
+    <div
+      ref={root}
+      aria-hidden
+      className="pointer-events-none fixed top-0 left-0 z-[9999] opacity-0 transition-opacity duration-200 will-change-transform"
+      style={{ width: W + PAD * 2, height: H + PAD * 2, transformOrigin: `${TIP_X}px ${TIP_Y}px` }}
+    >
+      <canvas ref={canvasRef} className="block h-full w-full" style={{ filter: 'drop-shadow(0 10px 12px rgb(58 42 32 / 0.25))' }} />
+    </div>
   )
 }
