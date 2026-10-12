@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fur cursor lab</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Instrument+Serif:ital@1&family=Inter+Tight:wght@900&family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root { --paper: #f4efe6; --ink: #121212; --hot: #ff4fa3; --fur: #f6a9cb; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); font-family: Inter, sans-serif; }
+      body.fur-on, body.fur-on * { cursor: none !important; }
+      main { min-height: 100%; display: grid; place-content: center; gap: 28px; padding: 40px 16px; text-align: center; }
+      h1 { margin: 0; font: 900 clamp(48px, 9vw, 120px) / 0.9 'Inter Tight', sans-serif; letter-spacing: -0.04em; }
+      h1 em { font: italic 400 1.05em 'Instrument Serif', serif; color: var(--hot); letter-spacing: 0; }
+      p { margin: 0; font: 600 34px Caveat, cursive; transform: rotate(-2deg); }
+      .row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+      button, a {
+        font: 600 18px Inter, sans-serif; color: var(--ink); text-decoration: none;
+        padding: 14px 26px; border-radius: 999px; border: 0; background: white;
+        box-shadow: 0 14px 30px -12px rgb(58 42 32 / 0.25);
+      }
+      button.hot { background: var(--hot); color: white; }
+
+      /* ── fur cursor ── */
+      #fur {
+        position: fixed; left: 0; top: 0; z-index: 9999; pointer-events: none;
+        width: 46px; height: 56px; will-change: transform;
+        transform-origin: 3px 4px; /* the arrow tip = the hotspot */
+        opacity: 0; transition: opacity 0.2s;
+      }
+      body.fur-on #fur { opacity: 1; }
+      #fur img { width: 100%; height: 100%; display: block; filter: url(#wind) drop-shadow(0 6px 6px rgb(58 42 32 / 0.25)); }
+      .fluff {
+        position: fixed; left: 0; top: 0; z-index: 9998; pointer-events: none;
+        width: 7px; height: 2px; border-radius: 2px; background: var(--fur);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Move <em>fast</em><br />feel the wind</h1>
+      <p>shake it, hover the buttons, click to squish ♡</p>
+      <div class="row">
+        <button class="hot">▶ Press start</button>
+        <button>Hover me</button>
+        <a href="#">A link</a>
+      </div>
+    </main>
+
+    <!-- Wind: animated turbulence displaces the fur; strength follows mouse speed -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <filter id="wind" x="-30%" y="-30%" width="160%" height="160%">
+        <feTurbulence id="windNoise" type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="2" seed="7" result="n" />
+        <feDisplacementMap id="windMap" in="SourceGraphic" in2="n" scale="2" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
+    <div id="fur" aria-hidden="true"><img src="cursor-fur.png" alt="" /></div>
+
+    <script type="module">
+      import { mountFurCursor } from './fur-cursor.js'
+      mountFurCursor()
+    </script>
+  </body>
+</html>
