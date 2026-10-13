@@ -1,6 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
-import { Character } from '../components/Character'
 import { LevelHeader, Reveal, Scribble, Section } from '../components/ui'
 import { GAMES, LEVELS, PROFILE, type Game } from '../data/cv'
 
@@ -118,9 +117,6 @@ export function Games({ onModal }: { onModal: (open: boolean) => void }) {
               )}
               <span className="absolute end-2 bottom-1.5 font-pixel text-[9px] text-white/80">CH{channel + 1}</span>
             </button>
-          </div>
-          <div className="pointer-events-none absolute end-[-6%] bottom-[-4%] hidden h-[62%] sm:block">
-            <Character pose="play" />
           </div>
           <Scribble className="absolute start-[2%] bottom-[2%] hidden sm:block" rotate={-6} delay={0.4}>
             playable right here!

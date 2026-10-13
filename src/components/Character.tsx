@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useAnimationControls, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react'
+import { AnimatePresence, motion, useAnimationControls, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useSpring } from 'motion/react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { LevelId } from '../data/cv'
 import { useGame } from '../game/GameProvider'
@@ -27,53 +27,96 @@ export function Character({ pose, className = '', breathe = true }: { pose: Pose
 /** Where the player stands on the START screen. The Player measures this box. */
 export const PLAYER_SLOT_ID = 'player-slot'
 
-const LEVEL_POSE: Partial<Record<LevelId, Pose>> = { profile: 'wave', skills: 'idle', quests: 'idle', side: 'idle' }
-// Levels whose scene has its own copy of her (she steps into the scene there)
-const HIDE_ON: LevelId[] = ['games', 'boss']
+// Her route: in each level she runs across the screen to this side, then stops and does the pose.
+const ROUTE: { id: LevelId; side: 'left' | 'right'; pose: Pose }[] = [
+  { id: 'profile', side: 'left', pose: 'wave' },
+  { id: 'skills', side: 'right', pose: 'idle' },
+  { id: 'quests', side: 'left', pose: 'idle' },
+  { id: 'side', side: 'right', pose: 'idle' },
+  { id: 'games', side: 'left', pose: 'play' },
+]
+// The boss arena has its own copy of her
+const HIDE_ON: LevelId[] = ['boss']
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
-const ease = (t: number) => 1 - Math.pow(1 - t, 3)
+const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2)
+
+type Geo = {
+  heroTop: number
+  heroLeft: number
+  heroH: number
+  runH: number
+  vw: number
+  vh: number
+  sections: { id: LevelId; top: number; height: number }[]
+}
 
 /**
- * The one player character. She starts big on the START screen, waving "hi! wanna play?".
- * As soon as you scroll she runs off the hero down to the bottom of the screen, then keeps
- * running across the page with your scroll: left → right as you go down, back as you go up.
- * When you stop she strikes the level's pose, and she hops on each new level.
+ * The one player character. She starts big on the right of the START screen, waving.
+ * When you scroll she runs left and drops to the floor of the screen; then in every level she
+ * runs across to the other side and stops there to wave, stand or play.
+ * Scroll only sets where she's headed — her position follows with spring physics, so she
+ * accelerates and slows down like a runner. She runs while she's actually moving and faces
+ * the way she's going.
  */
 export function Player({ hidden = false }: { hidden?: boolean }) {
   const { current } = useGame()
   const reduce = useReducedMotion()
   const { scrollY } = useScroll()
   const hop = useAnimationControls()
-  const [running, setRunning] = useState(false)
-  const [facingLeft, setFacingLeft] = useState(false)
+  const [moving, setMoving] = useState(false)
+  const [facingLeft, setFacingLeft] = useState(true)
+  const [stopPose, setStopPose] = useState<Pose>('wave')
   const [atHero, setAtHero] = useState(true)
   const [H, setH] = useState(400)
+  const geo = useRef<Geo>({ heroTop: 0, heroLeft: 0, heroH: 400, runH: 200, vw: 1280, vh: 800, sections: [] })
   const stopTimer = useRef(0)
-  const lastX = useRef(0)
 
-  // Geometry: hero slot (document coords) + runner size, refreshed on resize
-  const geo = useRef({ heroTop: 0, heroLeft: 0, heroH: 400, runH: 200, vw: 1280, vh: 800, doc: 4000 })
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const scale = useMotionValue(1)
+  // where she's headed (targets) and where she is (springs)
+  const tx = useMotionValue(0)
+  const ty = useMotionValue(0)
+  const ts = useMotionValue(1)
+  const x = useSpring(tx, { stiffness: 38, damping: 15, mass: 1 })
+  const y = useSpring(ty, { stiffness: 60, damping: 18 })
+  const scale = useSpring(ts, { stiffness: 60, damping: 18 })
 
-  const place = (sy: number) => {
+  const aim = (sy: number) => {
     const g = geo.current
-    const handoff = g.vh * 0.65 // scroll distance over which she runs from the hero to the track
-    const t = ease(clamp01(sy / handoff))
     const runW = g.runH * 0.6
-    const track = clamp01((sy - handoff) / Math.max(1, g.doc - g.vh - handoff))
-    const rx = 12 + track * (g.vw - runW - 24)
-    const ry = g.vh - g.runH - 6
-    const hx = g.heroLeft
-    const hy = g.heroTop - sy
-    const nx = hx + (rx - hx) * t
-    x.set(nx)
-    y.set(hy + (ry - hy) * t)
-    scale.set(1 + (g.runH / g.heroH - 1) * t)
-    if (Math.abs(nx - lastX.current) > 0.5) setFacingLeft(nx < lastX.current)
-    lastX.current = nx
+    const side = { left: 12, right: g.vw - runW - 12 }
+    const floor = g.vh - g.runH - 6
+    const small = g.runH / g.heroH
+
+    if (sy < 40 || !g.sections.length) {
+      // standing on her spot on the START screen
+      tx.set(g.heroLeft)
+      ty.set(g.heroTop - sy)
+      ts.set(1)
+      setStopPose('wave')
+    } else if (sy + g.vh * 0.5 < g.sections[0].top) {
+      // the first scroll commits her: she runs all the way off the hero to the left floor
+      tx.set(side.left)
+      ty.set(floor)
+      ts.set(small)
+      setStopPose(ROUTE[0].pose)
+    } else {
+      // the level under the middle of the screen decides the leg of the route she's on
+      const f = sy + g.vh * 0.5
+      let i = 0
+      for (let k = 0; k < ROUTE.length; k++) {
+        const sec = g.sections.find((s) => s.id === ROUTE[k].id)
+        if (sec && f >= sec.top) i = k
+      }
+      const leg = ROUTE[i]
+      const sec = g.sections.find((s) => s.id === leg.id)!
+      const from = i === 0 ? 'left' : ROUTE[i - 1].side
+      // she runs during the first half of the level and stands still for the rest
+      const p = easeInOut(clamp01((f - sec.top) / (sec.height * 0.5)))
+      tx.set(side[from] + (side[leg.side] - side[from]) * p)
+      ty.set(floor)
+      ts.set(small)
+      setStopPose(leg.pose)
+    }
     setAtHero(sy < 24)
   }
 
@@ -81,45 +124,54 @@ export function Player({ hidden = false }: { hidden?: boolean }) {
     const measure = () => {
       const slot = document.getElementById(PLAYER_SLOT_ID)
       const r = slot?.getBoundingClientRect()
-      const runH = innerWidth >= 1024 ? 210 : innerWidth >= 640 ? 170 : 112
+      const sy = window.scrollY
+      const heroH = r?.height || 400
       geo.current = {
-        heroTop: (r?.top ?? 120) + window.scrollY,
-        heroLeft: r ? r.left + r.width / 2 - (r.height * 0.6) / 2 : innerWidth * 0.6,
-        heroH: r?.height || 400,
-        runH,
+        heroTop: (r?.top ?? 120) + sy,
+        heroLeft: r ? r.left + r.width / 2 - (heroH * 0.6) / 2 : innerWidth * 0.6,
+        heroH,
+        runH: innerWidth >= 1024 ? 210 : innerWidth >= 640 ? 170 : 112,
         vw: innerWidth,
         vh: innerHeight,
-        doc: document.documentElement.scrollHeight,
+        sections: ROUTE.map(({ id }) => {
+          const el = document.getElementById(id)
+          const b = el?.getBoundingClientRect()
+          return { id, top: (b?.top ?? 0) + sy, height: b?.height ?? innerHeight }
+        }),
       }
-      lastX.current = geo.current.heroLeft
-      setH(geo.current.heroH)
-      place(window.scrollY)
+      setH(heroH)
+      aim(sy)
+      // first placement: jump straight there, no spring run-in
+      x.jump(tx.get())
+      y.jump(ty.get())
+      scale.jump(ts.get())
     }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(document.body)
-    addEventListener('resize', measure)
-    return () => {
-      ro.disconnect()
-      removeEventListener('resize', measure)
-    }
+    return () => ro.disconnect()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useMotionValueEvent(scrollY, 'change', (sy) => {
-    place(sy)
-    setRunning(true)
-    clearTimeout(stopTimer.current)
-    // keep running a beat after the scroll stops so short flicks don't flicker
-    stopTimer.current = window.setTimeout(() => setRunning(false), 320)
+  useMotionValueEvent(scrollY, 'change', aim)
+
+  // She's "running" while her body actually moves, facing the way she's going
+  useMotionValueEvent(x, 'change', () => {
+    const v = x.getVelocity()
+    if (Math.abs(v) > 40) {
+      setMoving(true)
+      setFacingLeft(v < 0)
+      clearTimeout(stopTimer.current)
+      stopTimer.current = window.setTimeout(() => setMoving(false), 140)
+    }
   })
 
   useEffect(() => {
     if (reduce || current === 'start') return
-    hop.start({ y: [0, -38, 0, -8, 0], transition: { duration: 0.7, times: [0, 0.38, 0.65, 0.82, 1], ease: 'easeOut' } })
-  }, [current, hop, reduce])
+    hop.start({ y: [0, -30, 0, -6, 0], transition: { duration: 0.6, times: [0, 0.38, 0.65, 0.82, 1], ease: 'easeOut' } })
+  }, [stopPose, current, hop, reduce])
 
-  const pose: Pose = running && !reduce ? 'run' : atHero ? 'wave' : (LEVEL_POSE[current] ?? 'idle')
+  const pose: Pose = moving && !reduce ? 'run' : stopPose
   const visible = !hidden && !HIDE_ON.includes(current)
 
   return (
@@ -144,9 +196,10 @@ export function Player({ hidden = false }: { hidden?: boolean }) {
               className="absolute bottom-0 start-1/2 h-full -translate-x-1/2"
               initial={false}
               animate={p === pose ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.94 }}
-              transition={{ duration: 0.16, ease: 'easeOut' }}
+              transition={{ duration: 0.14, ease: 'easeOut' }}
               style={{ originY: 1 }}
             >
+              {/* the run pose faces right; mirror it when she runs left */}
               <div className="h-full" style={{ transform: p === 'run' && facingLeft ? 'scaleX(-1)' : undefined }}>
                 <Character pose={p} breathe={p !== 'run'} className={p === 'run' ? 'motion-safe:animate-runbob' : ''} />
               </div>
@@ -154,14 +207,14 @@ export function Player({ hidden = false }: { hidden?: boolean }) {
           ))}
           <motion.div
             className="absolute start-1/2 bottom-0 h-[4%] w-[80%] -translate-x-1/2 rounded-[50%] bg-ink/15 blur-md"
-            animate={{ scaleX: running ? 1.2 : 1 }}
+            animate={{ scaleX: moving ? 1.25 : 1 }}
           />
-          {running && !reduce && <Dust left={!facingLeft} />}
+          {moving && !reduce && <Dust left={!facingLeft} />}
         </motion.div>
 
         {/* her greeting, only while she's standing on the START screen */}
         <AnimatePresence>
-          {atHero && !running && (
+          {atHero && !moving && (
             <motion.div
               className="absolute end-[-30%] top-[4%] flex flex-col items-end gap-2"
               exit={{ opacity: 0, scale: 0.6, transition: { duration: 0.15 } }}
