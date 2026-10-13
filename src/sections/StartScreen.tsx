@@ -75,11 +75,9 @@ export function StartScreen() {
               onClick={start}
               whileHover={reduce ? undefined : { scaleX: [1, 1.1, 0.95, 1.04, 1], scaleY: [1, 0.9, 1.06, 0.98, 1], transition: { duration: 0.6 } }}
               whileTap={{ scale: 0.92 }}
-              className="glass-btn relative shrink-0 rounded-full px-9 py-4 sm:px-11 sm:py-5"
+              className="glass-btn relative shrink-0 rounded-full px-10 py-5 sm:px-12 sm:py-6"
             >
-              {/* glossy top reflection */}
-              <span aria-hidden className="pointer-events-none absolute inset-x-6 top-1 h-[30%] rounded-full bg-gradient-to-b from-white/55 to-white/0" />
-              <span className="relative flex items-center gap-2.5 font-display text-xl font-black tracking-wide text-white uppercase [text-shadow:0_2px_0_rgb(140_0_70/.6),0_1px_8px_rgb(140_0_70/.35)] sm:text-2xl">
+              <span className="relative z-10 flex items-center gap-2.5 font-display text-xl font-black tracking-wide text-[#c4176f] uppercase [text-shadow:0_1px_0_rgb(255_255_255/.85),0_-1px_0_rgb(120_0_60/.25),0_0_10px_rgb(255_255_255/.5)] sm:text-2xl">
                 <span className="text-base motion-safe:animate-blink sm:text-lg">▶</span>
                 Start
               </span>
