@@ -73,16 +73,20 @@ export function StartScreen() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.8 }} className="mt-10 flex items-center gap-4">
             <motion.button
               onClick={start}
-              aria-label="Press start"
               whileHover={reduce ? undefined : { scaleX: [1, 1.1, 0.95, 1.04, 1], scaleY: [1, 0.9, 1.06, 0.98, 1], transition: { duration: 0.6 } }}
-              whileTap={{ scale: 0.9 }}
-              className="relative w-44 shrink-0 sm:w-56"
+              whileTap={{ scale: 0.92 }}
+              className="glass-btn relative shrink-0 rounded-full px-9 py-4 sm:px-11 sm:py-5"
             >
-              <img src="/props/glass-start.png" alt="" draggable={false} className="w-full drop-shadow-[0_18px_24px_rgb(255_79_163/0.35)]" />
+              {/* glossy top reflection */}
+              <span aria-hidden className="pointer-events-none absolute inset-x-6 top-1 h-[30%] rounded-full bg-gradient-to-b from-white/55 to-white/0" />
+              <span className="relative flex items-center gap-2.5 font-display text-xl font-black tracking-wide text-white uppercase [text-shadow:0_2px_0_rgb(140_0_70/.6),0_1px_8px_rgb(140_0_70/.35)] sm:text-2xl">
+                <span className="text-base motion-safe:animate-blink sm:text-lg">▶</span>
+                Start
+              </span>
             </motion.button>
-            <div className="relative ps-10 text-ink">
+            <div className="relative min-w-0 ps-8 text-ink sm:ps-10">
               <ScribbleArrow className="absolute start-0 -top-3 w-10 -scale-x-100" d="M6 40 C 30 10, 70 10, 108 30" head="M96 22 L108 30 L96 38" />
-              <p className="font-hand text-2xl font-semibold whitespace-nowrap -rotate-3 sm:text-4xl">psst… press start</p>
+              <p className="font-hand text-xl font-semibold whitespace-nowrap -rotate-3 sm:text-4xl">psst… press start</p>
               <p className="mt-1 hidden font-pixel text-[10px] text-ink-soft sm:block">or hit enter · or scroll</p>
             </div>
           </motion.div>
