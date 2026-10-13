@@ -57,9 +57,13 @@ export function QuestLog() {
     <Section id="quests" className="grain">
       <LevelHeader short={L.short} title={L.title} accent={L.accent} note="click a folder to open it" />
 
-      <div className="grid grid-cols-3 gap-3 sm:gap-6">
+      {/* phones: a swipeable row of full-size folders; sm+: three across */}
+      <p className="mb-2 font-pixel text-[10px] text-ink-soft sm:hidden">swipe → </p>
+      <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pt-2 pb-6 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:px-0 sm:pt-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
         {QUESTS.map((quest, i) => (
-          <Folder key={quest.company} quest={quest} color={COLORS[i % 3]} index={i} open={open === i} onOpen={() => setOpen(i)} />
+          <div key={quest.company} className="w-[74vw] max-w-80 shrink-0 snap-center sm:w-auto sm:max-w-none">
+            <Folder quest={quest} color={COLORS[i % 3]} index={i} open={open === i} onOpen={() => setOpen(i)} />
+          </div>
         ))}
       </div>
 
