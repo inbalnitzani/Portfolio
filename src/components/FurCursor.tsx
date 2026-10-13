@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { asset } from '../lib/asset'
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
@@ -55,7 +56,7 @@ export function FurCursor() {
 
     const html = document.documentElement
     const img = new Image()
-    img.src = '/cursor-fur.png'
+    img.src = asset('/cursor-fur.png')
     let strands: Strand[] = []
 
     // Grow strands from the image: roots where the fur is, colours sampled from it

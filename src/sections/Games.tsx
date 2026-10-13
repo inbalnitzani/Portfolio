@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } fr
 import { useEffect, useRef, useState } from 'react'
 import { LevelHeader, Reveal, Scribble, Section } from '../components/ui'
 import { GAMES, LEVELS, PROFILE, type Game } from '../data/cv'
+import { asset } from '../lib/asset'
 
 const L = LEVELS.find((l) => l.id === 'games')!
 const featured = GAMES.filter((g) => g.featured)
@@ -83,7 +84,7 @@ export function Games({ onModal }: { onModal: (open: boolean) => void }) {
         {/* The pink computer */}
         <motion.div ref={crt} style={reduce ? undefined : { scale, rotateX: tilt }} className="relative order-1 [perspective:1200px] lg:order-2">
           <div className="relative mx-auto w-[min(640px,100%)]">
-            <img src="/props/pink-computer.png" alt="" className="relative w-full" loading="lazy" />
+            <img src={asset('/props/pink-computer.png')} alt="" className="relative w-full" loading="lazy" />
             <button
               onClick={() => g.embedId && play(g)}
               aria-label={`Play ${g.title}`}

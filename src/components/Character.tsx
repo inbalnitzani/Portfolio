@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { LevelId } from '../data/cv'
 import { useGame } from '../game/GameProvider'
 import { Bubble } from './ui'
+import { asset } from '../lib/asset'
 
 export type Pose = 'idle' | 'wave' | 'run' | 'play'
 
@@ -15,7 +16,7 @@ const SCALE: Record<Pose, number> = { idle: 1, wave: 1.07, run: 0.9, play: 1 }
 export function Character({ pose, className = '', breathe = true }: { pose: Pose; className?: string; breathe?: boolean }) {
   return (
     <img
-      src={`/character/${pose}.png`}
+      src={asset(`/character/${pose}.png`)}
       alt="Inbal as a 3D game character"
       draggable={false}
       className={`h-full w-auto max-w-none origin-bottom select-none ${breathe ? 'motion-safe:animate-breathe' : ''} ${className}`}

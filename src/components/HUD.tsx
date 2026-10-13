@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { LEVELS, PROFILE } from '../data/cv'
 import { useGame } from '../game/GameProvider'
 import { scrollToLevel } from '../game/scroll'
+import { asset } from '../lib/asset'
 
 /** Frosted top bar: logo, scroll-driven XP bar, current level, level select. */
 export function HUD() {
@@ -91,7 +92,7 @@ export function Toasts() {
             transition={{ type: 'spring', stiffness: 300, damping: 26 }}
             className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-white/85 p-2.5 pe-4 text-start shadow-lift ring-1 ring-ink/5 backdrop-blur-xl"
           >
-            <img src="/props/chrome-star.png" alt="" className="size-11 shrink-0 motion-safe:animate-[spin_6s_linear_infinite]" />
+            <img src={asset('/props/chrome-star.png')} alt="" className="size-11 shrink-0 motion-safe:animate-[spin_6s_linear_infinite]" />
             <span className="min-w-0">
               <span className="block font-pixel text-[10px] text-hot">{t.title}</span>
               <span className="block truncate text-sm font-medium">{t.body}</span>

@@ -22,4 +22,6 @@ All text lives in [`src/data/cv.ts`](src/data/cv.ts): profile, stats, skills, qu
 
 ## Deploy
 
-Vercel: import the repo, framework preset **Vite**, no config needed.
+Pushing to `main` runs `.github/workflows/deploy.yml`, which builds with `BASE_PATH=/<repo>/` and publishes to GitHub Pages: https://inbalnitzani.github.io/Portfolio/
+
+Public files must be referenced with `asset('/path')` (`src/lib/asset.ts`) so they work under that base path.

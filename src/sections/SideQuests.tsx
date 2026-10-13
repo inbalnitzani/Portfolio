@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { LevelHeader, Prop, Reveal, Section } from '../components/ui'
 import { LEVELS, SIDE_QUESTS } from '../data/cv'
 import { PaintPlayer } from '../trailers/PaintPlayer'
+import { asset } from '../lib/asset'
 
 const L = LEVELS.find((l) => l.id === 'side')!
 
@@ -13,7 +14,7 @@ export function SideQuests() {
   return (
     <Section id="side" className="grain">
       <LevelHeader short={L.short} title={L.title} accent={L.accent} note="real apps, recorded on demo data" />
-      <Prop src="/props/fur-gamepad.png" depth={1.1} rotate={12} className="end-[-3%] top-[-4%] hidden w-40 lg:block" />
+      <Prop src={asset('/props/fur-gamepad.png')} depth={1.1} rotate={12} className="end-[-3%] top-[-4%] hidden w-40 lg:block" />
 
       <div className="grid items-start gap-8 lg:grid-cols-[1.55fr_1fr] lg:gap-12">
         <Reveal y={60}>

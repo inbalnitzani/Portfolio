@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from 'motion/react'
 import { Bubble, LevelHeader, Prop, Reveal, Scribble, ScribbleArrow, Section } from '../components/ui'
 import { LEVELS, PROFILE, RECEIPT } from '../data/cv'
+import { asset } from '../lib/asset'
 
 const L = LEVELS.find((l) => l.id === 'profile')!
 
@@ -9,7 +10,7 @@ export function Profile() {
   return (
     <Section id="profile" className="grain">
       <LevelHeader short={L.short} title={L.title} accent={L.accent} />
-      <Prop src="/props/disco-folder.png" depth={1.2} rotate={-8} className="end-[-2%] -top-8 hidden w-36 lg:block" />
+      <Prop src={asset('/props/disco-folder.png')} depth={1.2} rotate={-8} className="end-[-2%] -top-8 hidden w-36 lg:block" />
 
       <div className="grid items-start gap-14 lg:grid-cols-[0.9fr_0.85fr_1fr] lg:gap-10">
         {/* Polaroid */}
@@ -23,7 +24,7 @@ export function Profile() {
         >
           <div className="tape absolute -top-4 start-1/2 h-8 w-28 -translate-x-1/2 rotate-[5deg]" />
           <div className="aspect-[4/5] overflow-hidden bg-blush">
-            <img src="/me/portrait.png" alt={`Portrait of ${PROFILE.name}`} className="h-[118%] w-full object-cover object-top" loading="lazy" />
+            <img src={asset('/me/portrait.png')} alt={`Portrait of ${PROFILE.name}`} className="h-[118%] w-full object-cover object-top" loading="lazy" />
           </div>
           <figcaption className="absolute inset-x-0 bottom-4 text-center font-hand text-2xl font-semibold">me, probably debugging</figcaption>
         </motion.figure>
@@ -85,7 +86,7 @@ export function Profile() {
             {PROFILE.traits.map((t, i) => (
               <Reveal key={t} delay={i * 0.06} y={20}>
                 <li className="flex items-center gap-3 rounded-2xl bg-white/70 px-4 py-3 text-[15px] shadow-soft ring-1 ring-ink/5">
-                  <img src="/props/chrome-star.png" alt="" className="size-6 shrink-0" />
+                  <img src={asset('/props/chrome-star.png')} alt="" className="size-6 shrink-0" />
                   {t}
                 </li>
               </Reveal>

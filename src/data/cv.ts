@@ -1,3 +1,5 @@
+import { asset } from '../lib/asset'
+
 // All site content lives here. Edit this file to update the CV — components only render it.
 
 export const PROFILE = {
@@ -7,7 +9,7 @@ export const PROFILE = {
   location: 'Tel Aviv, Israel',
   email: 'inbalnitzani@gmail.com',
   phone: '+972-54-4886331',
-  cv: '/Inbal_Nitzani_CV.pdf',
+  cv: asset('/Inbal_Nitzani_CV.pdf'),
   links: {
     linkedin: 'https://www.linkedin.com/in/inbal-nitzani-07851421b/',
     github: 'https://github.com/inbalnitzani',
@@ -169,7 +171,7 @@ export const GAMES: Game[] = [
     title: 'Yoru',
     pitch: 'A 2D puzzle-platformer about loss, perception and crossing worlds. Switch magical Babalawo masks to jump between the realms of Rere and Apaadi and find Sonubare.',
     tags: ['Puzzle-platformer', '2D', 'Global Game Jam'],
-    cover: '/games/yoru.png',
+    cover: asset('/games/yoru.png'),
     url: 'https://niv-kadria.itch.io/yoru',
     embedId: '16313544',
     credit: 'Team game',
@@ -180,7 +182,7 @@ export const GAMES: Game[] = [
     title: 'Friday Night Rides',
     pitch: 'Can you help Dale get to his date on time? A skateboarding prototype on the boardwalk.',
     tags: ['Prototype', 'Arcade', 'Skate'],
-    cover: '/games/friday-night-rides.png',
+    cover: asset('/games/friday-night-rides.png'),
     url: 'https://amirdill.itch.io/friday-night-rides',
     embedId: '18062040',
     credit: 'Team game',
@@ -191,7 +193,7 @@ export const GAMES: Game[] = [
     title: '60 Knots',
     pitch: 'A low-poly 3D boat game. Steer your tugboat through rocky canyons, right in your browser.',
     tags: ['3D', 'Low-poly', 'WebGL'],
-    cover: '/games/60-knots.png',
+    cover: asset('/games/60-knots.png'),
     url: 'https://inbalnitzani.itch.io/60-knots',
     embedId: '16572552',
     featured: true,
@@ -201,7 +203,7 @@ export const GAMES: Game[] = [
     title: 'Space Invaders',
     pitch: 'The classic, rebuilt in 3D.',
     tags: ['3D', 'Shooter'],
-    cover: '/games/space-invaders.png',
+    cover: asset('/games/space-invaders.png'),
     url: 'https://inbalnitzani.itch.io/space-invaders',
   },
   {
@@ -209,7 +211,7 @@ export const GAMES: Game[] = [
     title: 'Basketball',
     pitch: 'Two players shooting balls on one court. The goal moves every 12 seconds.',
     tags: ['Sports', 'Local 2P'],
-    cover: '/games/basketball.png',
+    cover: asset('/games/basketball.png'),
     url: 'https://inbalnitzani.itch.io/basketball',
   },
   {
@@ -217,7 +219,7 @@ export const GAMES: Game[] = [
     title: 'Jumping Balls',
     pitch: 'Bouncy physics, quick runs.',
     tags: ['Physics', 'Casual'],
-    cover: '/games/jumping-balls.png',
+    cover: asset('/games/jumping-balls.png'),
     url: 'https://inbalnitzani.itch.io/jumping-balls',
   },
 ]
@@ -242,7 +244,7 @@ export const SIDE_QUESTS: SideQuest[] = [
     kicker: 'Client platform · solo build',
     body: 'A licensing platform for a music catalog: an instant price calculator for productions, an admin console to search and manage ~1,000 songs, and an AI song finder (a Claude Skill) that turns a creative brief into a shortlist.',
     stack: ['React', 'Supabase', 'PostgreSQL', 'Tailwind', 'Claude'],
-    video: { src: '/videos/music.mp4', file: 'nitzani_music', rate: 1.5, chapters: [
+    video: { src: asset('/videos/music.mp4'), file: 'nitzani_music', rate: 1.5, chapters: [
       { t: 0, caption: "Real app, demo data: the music licensing calculator" },
       { t: 16.46, caption: "Instant quote by production, media, territory and length" },
       { t: 24.73, caption: "Admin catalog: search and filter ~1,000 songs" },
@@ -256,7 +258,7 @@ export const SIDE_QUESTS: SideQuest[] = [
     kicker: 'Personal PWA · in progress',
     body: 'Peek at where your money went. An expense tracker that logs Apple Pay taps automatically, imports card statements, merges duplicates and shows each month as pink sticker charts, in Hebrew and English.',
     stack: ['Next.js 16', 'React 19', 'Supabase', 'next-intl', 'Playwright'],
-    video: { src: '/videos/trakaboo.mp4', file: 'trakaboo', phone: true, rate: 1.25, chapters: [
+    video: { src: asset('/videos/trakaboo.mp4'), file: 'trakaboo', phone: true, rate: 1.25, chapters: [
       { t: 0, caption: "Real app, demo data: this month at a glance" },
       { t: 6.7, caption: "Flip between months" },
       { t: 10.39, caption: "Every transaction, auto-categorised" },
@@ -271,7 +273,7 @@ export const SIDE_QUESTS: SideQuest[] = [
     kicker: 'Claude routine · runs daily at 08:00',
     body: 'A scheduled Claude routine that searches LinkedIn and Indeed every morning across four tracks (Frontend, Backend, Full Stack, Unity), checks each posting against my real experience, scores the match, tailors a CV and cover letter, and logs it all to a tracker app with documents stored in Supabase.',
     stack: ['Claude routines', 'Agent skills', 'Supabase', 'docx', 'Artifacts DB'],
-    video: { src: '/videos/joblog.mp4', file: 'job_search_log', rate: 1.15, chapters: [
+    video: { src: asset('/videos/joblog.mp4'), file: 'job_search_log', rate: 1.15, chapters: [
       { t: 0, caption: "A Claude routine fills this log every morning at 08:00" },
       { t: 1.78, caption: "Jobs it found and qualified, ready to apply" },
       { t: 4.91, caption: "Each one: match score, notes, tailored CV + cover letter" },

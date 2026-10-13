@@ -4,6 +4,7 @@ import { Character } from '../components/Character'
 import { LevelHeader, Section } from '../components/ui'
 import { LEVELS, PROFILE } from '../data/cv'
 import { useGame } from '../game/GameProvider'
+import { asset } from '../lib/asset'
 
 const L = LEVELS.find((l) => l.id === 'boss')!
 const MAX_HP = 100
@@ -95,7 +96,7 @@ export function Boss() {
                 {defeated ? (
                   <motion.img
                     key="win"
-                    src="/props/chrome-star.png"
+                    src={asset('/props/chrome-star.png')}
                     alt="Defeated, a chrome star"
                     initial={{ scale: 0, rotate: -90 }}
                     animate={{ scale: 1, rotate: 0 }}
@@ -104,7 +105,7 @@ export function Boss() {
                   />
                 ) : (
                   <motion.div key="boss" animate={shake} exit={{ scale: 0, rotate: 120, opacity: 0, transition: { duration: 0.4 } }} className="relative">
-                    <img src="/props/disco-folder.png" alt="The hiring pipeline boss, a disco-ball folder" className="w-full motion-safe:animate-float" />
+                    <img src={asset('/props/disco-folder.png')} alt="The hiring pipeline boss, a disco-ball folder" className="w-full motion-safe:animate-float" />
                     {/* angry eyes */}
                     <span className="absolute top-[46%] left-[30%] flex gap-[18%]" aria-hidden>
                       <i className="block h-3 w-5 rotate-12 rounded-b-full bg-ink" />
@@ -182,7 +183,7 @@ export function Boss() {
       </div>
 
       <footer className="mt-32 flex flex-col items-center gap-3 text-center text-sm text-white/50">
-        <img src="/props/chrome-star.png" alt="" className="size-10" />
+        <img src={asset('/props/chrome-star.png')} alt="" className="size-10" />
         <p>
           © {new Date().getFullYear()} {PROFILE.name} · built with React, Motion &amp; a lot of pink
         </p>

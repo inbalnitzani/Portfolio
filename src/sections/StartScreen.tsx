@@ -4,6 +4,7 @@ import { PLAYER_SLOT_ID } from '../components/Character'
 import { Prop, ScribbleArrow } from '../components/ui'
 import { PROFILE } from '../data/cv'
 import { scrollToLevel } from '../game/scroll'
+import { asset } from '../lib/asset'
 
 const TICKER = ['Full-stack engineer', 'Game developer', 'M.Des game design', 'AWS', 'React', 'Kubernetes', 'Unity', 'Claude Agent SDK', 'Tel Aviv']
 
@@ -31,8 +32,8 @@ export function StartScreen() {
 
   return (
     <section id="start" ref={ref} data-level="start" className="grain relative flex min-h-[100svh] flex-col overflow-hidden">
-      <Prop src="/props/chrome-star.png" depth={1.4} rotate={-14} className="start-[52%] top-[10%] w-20 sm:w-28" />
-      <Prop src="/props/chrome-star.png" depth={0.7} rotate={18} className="end-[4%] bottom-[22%] w-12 opacity-80 sm:w-16" />
+      <Prop src={asset('/props/chrome-star.png')} depth={1.4} rotate={-14} className="start-[52%] top-[10%] w-20 sm:w-28" />
+      <Prop src={asset('/props/chrome-star.png')} depth={0.7} rotate={18} className="end-[4%] bottom-[22%] w-12 opacity-80 sm:w-16" />
 
       <motion.div
         animate={zoom ? { scale: 1.12, opacity: 0.4, filter: 'blur(6px)' } : { scale: 1, opacity: 1, filter: 'blur(0px)' }}
@@ -80,7 +81,7 @@ export function StartScreen() {
             >
               {/* glossy jelly-glass lettering (generated 3D render, background removed) */}
               <img
-                src="/props/start-jelly.png"
+                src={asset('/props/start-jelly.png')}
                 alt=""
                 draggable={false}
                 className="w-full drop-shadow-[0_14px_18px_rgb(255_79_163/0.35)] motion-safe:animate-jelly"
@@ -106,7 +107,7 @@ export function StartScreen() {
               {TICKER.map((t) => (
                 <span key={t} className="flex items-center gap-6 px-4 font-display text-lg font-extrabold whitespace-nowrap sm:text-xl">
                   {t}
-                  <img src="/props/chrome-star.png" alt="" className="size-6" />
+                  <img src={asset('/props/chrome-star.png')} alt="" className="size-6" />
                 </span>
               ))}
             </div>
