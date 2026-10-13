@@ -75,12 +75,16 @@ export function StartScreen() {
               onClick={start}
               whileHover={reduce ? undefined : { scaleX: [1, 1.1, 0.95, 1.04, 1], scaleY: [1, 0.9, 1.06, 0.98, 1], transition: { duration: 0.6 } }}
               whileTap={{ scale: 0.92 }}
-              className="glass-btn relative shrink-0 rounded-full px-10 py-5 sm:px-12 sm:py-6"
+              aria-label="Press start"
+              className="relative w-48 shrink-0 rounded-3xl sm:w-64"
             >
-              <span className="relative z-10 flex items-center gap-2.5 font-display text-xl font-black tracking-wide text-[#c4176f] uppercase [text-shadow:0_1px_0_rgb(255_255_255/.85),0_-1px_0_rgb(120_0_60/.25),0_0_10px_rgb(255_255_255/.5)] sm:text-2xl">
-                <span className="text-base motion-safe:animate-blink sm:text-lg">▶</span>
-                Start
-              </span>
+              {/* glossy jelly-glass lettering (generated 3D render, background removed) */}
+              <img
+                src="/props/start-jelly.png"
+                alt=""
+                draggable={false}
+                className="w-full drop-shadow-[0_14px_18px_rgb(255_79_163/0.35)] motion-safe:animate-jelly"
+              />
             </motion.button>
             <div className="relative min-w-0 ps-8 text-ink sm:ps-10">
               <ScribbleArrow className="absolute start-0 -top-3 w-10 -scale-x-100" d="M6 40 C 30 10, 70 10, 108 30" head="M96 22 L108 30 L96 38" />

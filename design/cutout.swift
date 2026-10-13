@@ -59,6 +59,28 @@ if args.count > 4, args[4] == "shadow" {
   }
 }
 
+// Optional holes pass: enclosed background (inside letters like A, R, O) isn't connected to the
+// border, so remove any connected near-background region bigger than 0.15% of the image.
+// Small near-white specks are glossy highlights and stay.
+if args.contains("holes") {
+  var seen = [Bool](repeating: false, count: w * h)
+  let minArea = w * h * 15 / 10000
+  for start in 0..<(w * h) where !isBg[start] && !seen[start] && dist(start) <= threshold {
+    var region: [Int] = [], stack = [start]
+    seen[start] = true
+    while let i = stack.popLast() {
+      region.append(i)
+      let x = i % w, y = i / w
+      for n in [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1]
+      where n >= 0 && !seen[n] && !isBg[n] && dist(n) <= threshold {
+        seen[n] = true
+        stack.append(n)
+      }
+    }
+    if region.count >= minArea { for i in region { isBg[i] = true } }
+  }
+}
+
 // Alpha: 0 for background; feather foreground pixels that touch background
 for i in 0..<(w * h) {
   var a: Double = isBg[i] ? 0 : 1
